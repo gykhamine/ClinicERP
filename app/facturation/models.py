@@ -1,0 +1,88 @@
+from django.db import models
+from apps.patients.models import Patient
+from apps.accounts.models import Utilisateur
+
+class ServiceClinic(models.Model):
+    nom = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True)
+    prix = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True)
+    actif = models.BooleanField(default=True)
+    def __str__(self): return f"{self.nom} ({self.prix} FCFA)"
+
+from decimal import Decimal
+
+class Facture(models.Model):
+    STATUT = [
+        ('brouillon', 'Brouillon'),
+        ('emise', 'Émise'),
+        ('payee', 'Payée'),
+        ('annulee', 'Annulée'),
+        ('partiel', 'Partiel')
+    ]
+
+    MODE_PAIEMENT = [
+        ('especes', 'Espèces'),
+        ('mobile_money', 'Mobile Money'),
+        ('cheque', 'Chèque'),
+        ('assurance', 'Assurance'),
+        ('virement', 'Virement')
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='factures')
+    numero = models.CharField(max_length=20, unique=True)
+    date_emission = models.DateTimeField(auto_now_add=True)
+    date_echeance = models.DateField(null=True, blank=True)
+    statut = models.CharField(max_length=15, choices=STATUT, default='brouillon')
+    mode_paiement = models.CharField(max_length=20, choices=MODE_PAIEMENT, blank=True)
+    remise_pourcent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    notes = models.TextField(blank=True)
+    caissier = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True)
+    consultation = models.ForeignKey(
+        'consultations.Consultation',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    def sous_total(self):
+        return sum(
+            (Decimal(str(l.total())) for l in self.lignes.all()),
+            Decimal('0')
+        )
+
+    def montant_remise(self):
+        return self.sous_total() * (self.remise_pourcent / Decimal('100'))
+
+    def total(self):
+        return self.sous_total() - self.montant_remise()
+
+    def save(self, *args, **kwargs):
+        if not self.numero:
+            import random
+            self.numero = f"FAC{random.randint(100000, 999999)}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Facture {self.numero} - {self.patient}"
+
+    class Meta:
+        ordering = ['-date_emission']
+class LigneFacture(models.Model):
+    facture = models.ForeignKey(Facture, on_delete=models.CASCADE, related_name='lignes')
+    description = models.CharField(max_length=300)
+    quantite = models.DecimalField(max_digits=8, decimal_places=2, default=1)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
+    service = models.ForeignKey(ServiceClinic, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def total(self):
+        return float(self.quantite) * float(self.prix_unitaire)
+
+class Paiement(models.Model):
+    facture = models.ForeignKey(Facture, on_delete=models.CASCADE, related_name='paiements')
+    montant = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateTimeField(auto_now_add=True)
+    mode = models.CharField(max_length=20)
+    reference = models.CharField(max_length=100, blank=True)
+    caissier = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True)
+    notes = models.TextField(blank=True)
