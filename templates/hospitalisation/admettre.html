@@ -1,0 +1,76 @@
+{% extends "base/base.html" %}
+{% block title %}Admettre patient{% endblock %}
+{% block page_title %}Admission patient{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🏥 Admettre un patient</h1></div><a href="/hospitalisation/" class="btn btn-outline">← Retour</a></div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>Patient & Médecin</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Patient *</label>
+            <select name="patient" class="form-select" required>
+              <option value="">— Sélectionner —</option>
+              {% for p in patients %}<option value="{{ p.pk }}">{{ p.utilisateur.get_full_name }} ({{ p.numero_dossier }})</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Médecin responsable *</label>
+            <select name="medecin" class="form-select" required>
+              <option value="">— Sélectionner —</option>
+              {% for m in medecins %}<option value="{{ m.pk }}">Dr. {{ m.get_full_name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Mode d'entrée</label>
+              <select name="mode_entree" class="form-select">
+                <option value="programmee">Programmée</option>
+                <option value="urgence">Urgences</option>
+                <option value="transfert">Transfert interne</option>
+                <option value="externe">Transfert externe</option>
+              </select>
+            </div>
+            <div><label class="form-label">Date d'entrée *</label><input type="datetime-local" name="date_entree" class="form-control" required></div>
+            <div><label class="form-label">Sortie prévue</label><input type="date" name="date_sortie_prevue" class="form-control"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>Informations médicales</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Motif d'hospitalisation *</label><textarea name="motif_hospitalisation" class="form-control" rows="3" required></textarea></div>
+          <div><label class="form-label">Diagnostic d'entrée</label><textarea name="diagnostic_entree" class="form-control" rows="2"></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>🛏️ Choisir un lit ({{ lits_libres|length }} disponibles)</h5></div>
+      <div class="card-body" style="padding:0;max-height:500px;overflow-y:auto;">
+        {% regroup lits_libres by chambre.service as lits_par_service %}
+        {% for service_group in lits_par_service %}
+        <div style="padding:10px 16px;background:#f7fafc;border-bottom:1px solid var(--border);font-weight:700;font-size:13px;position:sticky;top:0;">
+          🏥 {{ service_group.grouper.nom }}
+        </div>
+        {% for lit in service_group.list %}
+        <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;" onmouseenter="this.style.background='var(--primary-light)'" onmouseleave="this.style.background='white'">
+          <input type="radio" name="lit" value="{{ lit.pk }}" required style="width:16px;height:16px;">
+          <div>
+            <div style="font-weight:600;font-size:13px;">Ch.{{ lit.chambre.numero }} — Lit {{ lit.numero }}</div>
+            <div style="font-size:11px;color:var(--text-muted);">{{ lit.chambre.get_type_chambre_display }} • Étage {{ lit.chambre.etage }}</div>
+          </div>
+          <span class="badge badge-termine" style="margin-left:auto;">Libre</span>
+        </label>
+        {% endfor %}
+        {% empty %}
+        <div style="padding:24px;text-align:center;color:var(--text-muted);">Aucun lit disponible.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+    <a href="/hospitalisation/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">🏥 Admettre le patient</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base/base.html" %}
+{% block title %}Bloc opératoire{% endblock %}
+{% block page_title %}Bloc opératoire{% endblock %}
+{% block extra_css %}
+<style>
+.salle-card { background:white; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--border); overflow:hidden; }
+.salle-header { padding:12px 16px; font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+.salle-disponible { border-top:4px solid var(--success); }
+.salle-en_cours { border-top:4px solid var(--danger); }
+.salle-nettoyage { border-top:4px solid var(--warning); }
+.prog-card { border-left:4px solid; padding:14px; border-radius:0 8px 8px 0; margin-bottom:8px; background:white; box-shadow:var(--shadow); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🏥 Bloc opératoire</h1><div class="breadcrumb">Programme du {{ date_filtre }}</div></div>
+  <div style="display:flex;gap:8px;">
+    <form method="get" style="display:flex;gap:8px;align-items:center;">
+      <input type="date" name="date" value="{{ date_filtre }}" class="form-control" style="width:180px;" onchange="this.form.submit()">
+    </form>
+    <a href="/bloc/programmer/" class="btn btn-primary">+ Programmer opération</a>
+    <a href="/bloc/salles/" class="btn btn-outline">⚙️ Salles</a>
+  </div>
+</div>
+
+<!-- Statut salles -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px;">
+  {% for salle in salles %}
+  <div class="salle-card salle-{{ salle.statut }}">
+    <div class="salle-header">
+      <span>{{ salle.numero }} — {{ salle.nom }}</span>
+      <span class="badge badge-{% if salle.statut == 'disponible' %}termine{% elif salle.statut == 'en_cours' %}annule{% else %}attente{% endif %}">{{ salle.get_statut_display }}</span>
+    </div>
+  </div>
+  {% empty %}
+  <div class="card"><div class="card-body text-muted">Aucune salle. <a href="/bloc/salles/">Configurer →</a></div></div>
+  {% endfor %}
+</div>
+
+<!-- Programme du jour -->
+<div class="card">
+  <div class="card-header"><h5>📋 Programme opératoire — {{ date_filtre }}</h5></div>
+  <div class="card-body">
+    {% if programmes %}
+    {% for p in programmes %}
+    <div class="prog-card" style="border-color:{% if p.niveau_urgence == 'urgence_vitale' %}var(--danger){% elif p.niveau_urgence == 'urgent' %}var(--warning){% else %}var(--primary){% endif %};">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <span style="font-size:15px;font-weight:700;color:var(--primary);">{{ p.date_heure_prevue|time:"H:i" }}</span>
+            <span style="font-weight:700;font-size:14px;">{{ p.type_intervention.nom }}</span>
+            <span class="badge badge-{% if p.statut == 'confirme' or p.statut == 'termine' %}termine{% elif p.statut == 'en_cours' %}confirme{% elif p.statut == 'annule' %}annule{% else %}attente{% endif %}">{{ p.get_statut_display }}</span>
+            {% if p.niveau_urgence != 'elective' %}<span class="badge badge-urgente">⚠️ {{ p.get_niveau_urgence_display }}</span>{% endif %}
+          </div>
+          <div class="patient-meta">
+            <span class="patient-meta-item">👤 {{ p.patient.utilisateur.get_full_name }}</span>
+            <span class="patient-meta-item">🩺 Dr. {{ p.chirurgien_principal.last_name }}</span>
+            {% if p.anesthesiste %}<span class="patient-meta-item">💉 Dr. {{ p.anesthesiste.last_name }} (Anesthésie)</span>{% endif %}
+            {% if p.salle %}<span class="patient-meta-item">🏥 {{ p.salle.numero }}</span>{% endif %}
+            <span class="patient-meta-item">⏱️ ~{{ p.duree_prevue_minutes }} min</span>
+          </div>
+          {% if p.indication %}<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">{{ p.indication|truncatechars:80 }}</div>{% endif %}
+        </div>
+        <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end;">
+          <a href="/bloc/{{ p.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+          {% if p.statut == 'programme' or p.statut == 'confirme' %}
+          <a href="/bloc/{{ p.pk }}/checklist/" class="btn btn-primary btn-sm">
+            ✅ Check{% if p.checklist %} {{ p.checklist.score_completion }}%{% endif %}
+          </a>
+          {% endif %}
+          {% if p.statut in 'programme,confirme,en_cours' %}
+          <form method="post" action="/bloc/{{ p.pk }}/statut/" style="display:inline;">
+            {% csrf_token %}
+            <select name="statut" onchange="this.form.submit()" class="form-select" style="font-size:11px;padding:3px 6px;width:auto;">
+              <option>Changer statut…</option>
+              <option value="confirme">Confirmer</option>
+              <option value="en_cours">▶ Démarrer</option>
+              <option value="termine">✅ Terminer</option>
+              <option value="annule">❌ Annuler</option>
+              <option value="reporte">↩ Reporter</option>
+            </select>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--text-muted);">
+      <div style="font-size:40px;margin-bottom:12px;">📋</div>
+      Aucune opération programmée pour cette date.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

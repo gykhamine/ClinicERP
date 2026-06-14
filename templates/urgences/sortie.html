@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+{% block title %}Sortie urgence{% endblock %}
+{% block page_title %}Sortie des urgences{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🚪 Sortie — {{ passage.patient }}</h1><div class="breadcrumb">Durée totale : {{ passage.duree_totale_minutes }} min</div></div><a href="/urgences/{{ passage.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:500px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Motif de sortie *</label>
+        <select name="motif_sortie" class="form-select" required>
+          <option value="domicile">🏠 Retour à domicile</option>
+          <option value="hospitalisation">🏥 Hospitalisation</option>
+          <option value="transfert">🚑 Transfert établissement</option>
+          <option value="dcd">⚫ Décès</option>
+          <option value="pss">🚶 Parti sans soins</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-success btn-lg w-100">✅ Confirmer la sortie</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

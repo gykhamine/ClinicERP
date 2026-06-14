@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+{% block title %}Sortie patient{% endblock %}
+{% block page_title %}Sortie du patient{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🚪 Sortie — {{ hosp.patient }}</h1><div class="breadcrumb">Durée d'hospitalisation : {{ hosp.duree_jours }} jour(s)</div></div><a href="/hospitalisation/{{ hosp.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card" style="border-left:4px solid var(--primary);">
+    <div class="card-body">
+      <div class="grid-2" style="gap:12px;font-size:13px;">
+        <div><span class="text-muted">Patient</span><div style="font-weight:600;margin-top:2px;">{{ hosp.patient.utilisateur.get_full_name }}</div></div>
+        <div><span class="text-muted">Service</span><div style="font-weight:600;margin-top:2px;">{{ hosp.service.nom }}</div></div>
+        <div><span class="text-muted">Lit</span><div style="font-weight:600;margin-top:2px;">Ch.{{ hosp.lit.chambre.numero }} — Lit {{ hosp.lit.numero }}</div></div>
+        <div><span class="text-muted">Entrée le</span><div style="font-weight:600;margin-top:2px;">{{ hosp.date_entree|date:"d/m/Y" }}</div></div>
+        <div><span class="text-muted">Durée</span><div style="font-weight:700;color:var(--primary);margin-top:2px;font-size:18px;">{{ hosp.duree_jours }} jours</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Modalités de sortie</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">Type de sortie *</label>
+          <select name="statut" class="form-select" required>
+            <option value="sorti">✅ Sortie normale</option>
+            <option value="transfere">🔄 Transfert vers autre établissement</option>
+            <option value="dcd">⚫ Décès</option>
+          </select>
+        </div>
+        <div class="mb-2"><label class="form-label">Diagnostic de sortie *</label><textarea name="diagnostic_sortie" class="form-control" rows="3" required placeholder="Diagnostic final..."></textarea></div>
+        <div class="mb-3"><label class="form-label">Compte-rendu de sortie</label><textarea name="compte_rendu_sortie" class="form-control" rows="5" placeholder="Résumé du séjour, traitements reçus, recommandations, ordonnance de sortie..."></textarea></div>
+        <div class="alert alert-warning">⚠️ Le lit sera automatiquement mis en état de nettoyage après confirmation.</div>
+        <button type="submit" class="btn btn-warning btn-lg w-100">🚪 Confirmer la sortie</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

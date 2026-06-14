@@ -1,0 +1,76 @@
+{% extends "base/base.html" %}
+{% block title %}Nouveau patient{% endblock %}
+{% block page_title %}Nouveau patient{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>👤 Nouveau patient</h1><div class="breadcrumb">Créer un dossier patient</div></div>
+  <a href="/patients/" class="btn btn-outline">← Retour</a>
+</div>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>🔑 Compte utilisateur</h5></div>
+        <div class="card-body">
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Prénom *</label><input type="text" name="first_name" class="form-control" required></div>
+            <div><label class="form-label">Nom *</label><input type="text" name="last_name" class="form-control" required></div>
+            <div><label class="form-label">Nom d'utilisateur *</label><input type="text" name="username" class="form-control" required placeholder="ex: jean.mabiala"></div>
+            <div><label class="form-label">Mot de passe</label><input type="password" name="password" class="form-control" value="patient123"></div>
+            <div><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
+            <div><label class="form-label">Téléphone</label><input type="text" name="telephone" class="form-control" placeholder="+242 06..."></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>🚨 Contact d'urgence</h5></div>
+        <div class="card-body">
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Nom du contact</label><input type="text" name="contact_urgence_nom" class="form-control"></div>
+            <div><label class="form-label">Téléphone</label><input type="text" name="contact_urgence_tel" class="form-control"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>🏥 Informations médicales</h5></div>
+        <div class="card-body">
+          <div class="grid-2" style="gap:14px;">
+            <div>
+              <label class="form-label">Groupe sanguin</label>
+              <select name="groupe_sanguin" class="form-select">
+                <option value="">— Inconnu —</option>
+                {% for val, label in form.groupe_sanguin.field.choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Médecin traitant</label>
+              <select name="medecin_traitant" class="form-select">
+                <option value="">— Aucun —</option>
+                {% for m in form.medecin_traitant.field.queryset %}<option value="{{ m.pk }}">Dr. {{ m.get_full_name }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="mt-2"><label class="form-label">Allergies connues</label><textarea name="allergies" class="form-control" rows="2" placeholder="Pénicilline, sulfamides..."></textarea></div>
+          <div class="mt-2"><label class="form-label">Antécédents médicaux</label><textarea name="antecedents" class="form-control" rows="3" placeholder="Diabète, hypertension, chirurgies..."></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>🛡️ Assurance</h5></div>
+        <div class="card-body">
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Nom assurance</label><input type="text" name="assurance" class="form-control" placeholder="CNAMGS, CNSS..."></div>
+            <div><label class="form-label">N° police</label><input type="text" name="numero_assurance" class="form-control"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+    <a href="/patients/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">✅ Enregistrer le patient</button>
+  </div>
+</form>
+{% endblock %}

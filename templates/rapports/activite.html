@@ -1,0 +1,99 @@
+{% extends "base/base.html" %}
+{% block title %}Rapport d'activité{% endblock %}
+{% block page_title %}Rapport d'activité{% endblock %}
+{% block extra_css %}<style>canvas{max-height:260px;}</style>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🩺 Rapport d'activité</h1></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/rapports/pdf/activite/" class="btn btn-primary">⬇ Exporter PDF</a>
+    <a href="/rapports/" class="btn btn-outline">← Retour</a>
+  </div>
+</div>
+
+<div class="grid-stats mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">👤</div>
+    <div><div class="stat-value">{{ nb_patients_total }}</div><div class="stat-label">Patients enregistrés</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-accent-soft">🩺</div>
+    <div><div class="stat-value">{{ nb_consultations_total }}</div><div class="stat-label">Consultations totales</div></div>
+  </div>
+</div>
+
+<div class="grid-2 mb-3">
+  <div class="card">
+    <div class="card-header"><h5>📊 Consultations par mois (6 mois)</h5></div>
+    <div class="card-body"><canvas id="chartMois"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>👨‍⚕️ Activité par médecin</h5></div>
+    <div class="card-body"><canvas id="chartMedecins"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h5>👨‍⚕️ Détail par médecin</h5></div>
+  <table class="table-clinic">
+    <thead><tr><th>Médecin</th><th>Consultations totales</th><th>Part (%)</th></tr></thead>
+    <tbody>
+      {% for m in medecins_stats %}
+      {% if m.consultations > 0 %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar">🩺</div>
+            <strong>{{ m.nom }}</strong>
+          </div>
+        </td>
+        <td><strong>{{ m.consultations }}</strong></td>
+        <td>
+          {% if nb_consultations_total > 0 %}
+          {% widthratio m.consultations nb_consultations_total 100 as pct %}
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;height:8px;background:var(--border);border-radius:4px;">
+              <div style="width:{{ pct }}%;height:100%;background:var(--primary);border-radius:4px;"></div>
+            </div>
+            <span style="font-size:12px;font-weight:600;min-width:32px;">{{ pct }}%</span>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endif %}
+      {% empty %}
+      <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">Aucune donnée.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const moisData = {{ mois_data|safe }};
+const medData = {{ medecins_stats|safe }};
+const palette = ['#0F6B8A','#00BFA5','#F57C00','#E53935','#7b1fa2','#1565c0'];
+
+new Chart(document.getElementById('chartMois'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(moisData),
+    datasets:[{ label:'Consultations', data:Object.values(moisData), backgroundColor:'#0F6B8A', borderRadius:6 }]
+  },
+  options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} }
+});
+
+const medFiltered = medData.filter(m => m.consultations > 0);
+if (medFiltered.length) {
+  new Chart(document.getElementById('chartMedecins'), {
+    type: 'doughnut',
+    data:{
+      labels: medFiltered.map(m => m.nom),
+      datasets:[{ data: medFiltered.map(m => m.consultations), backgroundColor:palette, borderWidth:2 }]
+    },
+    options:{ responsive:true, plugins:{legend:{position:'right'}} }
+  });
+}
+</script>
+{% endblock %}

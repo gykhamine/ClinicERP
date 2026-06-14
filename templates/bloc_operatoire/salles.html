@@ -1,0 +1,38 @@
+{% extends "base/base.html" %}
+{% block title %}Salles opératoires{% endblock %}
+{% block page_title %}Salles opératoires{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🏥 Salles opératoires</h1></div><a href="/bloc/" class="btn btn-outline">← Planning</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Salles configurées</h5></div>
+    <table class="table-clinic">
+      <thead><tr><th>N°</th><th>Nom</th><th>Statut</th><th>Équipements</th></tr></thead>
+      <tbody>
+        {% for s in salles %}
+        <tr>
+          <td style="font-weight:700;font-family:monospace;">{{ s.numero }}</td>
+          <td>{{ s.nom }}</td>
+          <td><span class="badge badge-{% if s.statut == 'disponible' %}termine{% elif s.statut == 'en_cours' %}annule{% else %}attente{% endif %}">{{ s.get_statut_display }}</span></td>
+          <td style="font-size:12px;color:var(--text-muted);">{{ s.equipements|truncatechars:50 }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Aucune salle.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Ajouter une salle</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="grid-2" style="gap:14px;margin-bottom:14px;">
+          <div><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required placeholder="Bloc 1 — Chirurgie générale"></div>
+          <div><label class="form-label">N° *</label><input type="text" name="numero" class="form-control" required placeholder="B1"></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Équipements</label><textarea name="equipements" class="form-control" rows="2"></textarea></div>
+        <button type="submit" class="btn btn-primary w-100">+ Ajouter la salle</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

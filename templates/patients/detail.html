@@ -1,0 +1,184 @@
+{% extends "base/base.html" %}
+{% block title %}{{ patient }}{% endblock %}
+{% block page_title %}Dossier patient{% endblock %}
+{% block content %}
+<div class="patient-header">
+  <div class="patient-avatar">{{ patient.utilisateur.first_name.0 }}{{ patient.utilisateur.last_name.0 }}</div>
+  <div style="flex:1;">
+    <div class="patient-name">{{ patient.utilisateur.get_full_name }}</div>
+    <div class="patient-meta">
+      <span class="patient-meta-item">📋 {{ patient.numero_dossier }}</span>
+      {% if patient.utilisateur.telephone %}<span class="patient-meta-item">📞 {{ patient.utilisateur.telephone }}</span>{% endif %}
+      {% if patient.groupe_sanguin %}<span class="patient-meta-item">🩸 {{ patient.groupe_sanguin }}</span>{% endif %}
+      {% if patient.medecin_traitant %}<span class="patient-meta-item">🩺 Dr. {{ patient.medecin_traitant.last_name }}</span>{% endif %}
+      {% if patient.assurance %}<span class="patient-meta-item">🛡️ {{ patient.assurance }}</span>{% endif %}
+    </div>
+  </div>
+  {% if patient.qr_code %}<img src="{{ patient.qr_code.url }}" style="width:80px;height:80px;border-radius:8px;border:2px solid var(--border);">{% endif %}
+  <div style="display:flex;gap:8px;">
+    <a href="/patients/{{ patient.pk }}/modifier/" class="btn btn-outline btn-sm">✏️ Modifier</a>
+    {% if user.role in 'medecin,chef' %}
+    <a href="/consultations/nouvelle/" class="btn btn-primary btn-sm">🩺 Consulter</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if patient.allergies %}<div class="alert alert-danger">⚠️ <strong>Allergies :</strong> {{ patient.allergies }}</div>{% endif %}
+
+<div class="tabs">
+  <a href="#" class="tab-item active" onclick="switchTab(event,'consultations')">🩺 Consultations</a>
+  <a href="#" class="tab-item" onclick="switchTab(event,'rdv')">📅 Rendez-vous</a>
+  <a href="#" class="tab-item" onclick="switchTab(event,'analyses')">🔬 Analyses</a>
+  <a href="#" class="tab-item" onclick="switchTab(event,'factures')">💰 Factures</a>
+  <a href="#" class="tab-item" onclick="switchTab(event,'dossier')">📁 Documents</a>
+  <a href="#" class="tab-item" onclick="switchTab(event,'infos')">ℹ️ Informations</a>
+</div>
+
+<div id="tab-consultations">
+  <div class="card">
+    <div class="card-header"><h5>🩺 Historique des consultations</h5>
+      {% if user.role in 'medecin,chef' %}<a href="/consultations/nouvelle/" class="btn btn-primary btn-sm">+ Nouvelle</a>{% endif %}
+    </div>
+    <div class="timeline" style="padding:20px 20px 20px 48px;">
+      {% for c in consultations %}
+      <div class="timeline-item">
+        <div class="timeline-date">{{ c.date|date:"d/m/Y à H:i" }} — Dr. {{ c.medecin.last_name }}</div>
+        <div class="timeline-content">
+          <div style="font-weight:700;margin-bottom:4px;">{{ c.diagnostic }}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Motif : {{ c.motif }}</div>
+          {% if c.temperature or c.tension %}
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            {% if c.tension %}<span style="font-size:12px;">❤️ {{ c.tension }}</span>{% endif %}
+            {% if c.temperature %}<span style="font-size:12px;">🌡️ {{ c.temperature }}°C</span>{% endif %}
+            {% if c.poids %}<span style="font-size:12px;">⚖️ {{ c.poids }}kg</span>{% endif %}
+          </div>
+          {% endif %}
+          <div style="margin-top:10px;"><a href="/consultations/{{ c.pk }}/" class="btn btn-outline btn-sm">Voir détail →</a></div>
+        </div>
+      </div>
+      {% empty %}<p class="text-muted" style="padding:16px 0;">Aucune consultation enregistrée.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div id="tab-rdv" style="display:none;">
+  <div class="card">
+    <div class="card-header"><h5>📅 Rendez-vous</h5>
+      {% if user.role != 'patient' %}<a href="/consultations/rdv/nouveau/" class="btn btn-primary btn-sm">+ Nouveau RDV</a>{% endif %}
+    </div>
+    <table class="table-clinic">
+      <thead><tr><th>Date & Heure</th><th>Médecin</th><th>Motif</th><th>Statut</th></tr></thead>
+      <tbody>
+        {% for r in rendez_vous %}
+        <tr>
+          <td style="font-weight:600;">{{ r.date_heure|date:"d/m/Y H:i" }}</td>
+          <td>Dr. {{ r.medecin.last_name }}</td>
+          <td>{{ r.motif|truncatechars:40 }}</td>
+          <td><span class="badge badge-{{ r.statut }}">{{ r.get_statut_display }}</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Aucun rendez-vous.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="tab-analyses" style="display:none;">
+  <div class="card">
+    <div class="card-header"><h5>🔬 Analyses biologiques</h5></div>
+    <table class="table-clinic">
+      <thead><tr><th>Date</th><th>Analyses demandées</th><th>Priorité</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for a in analyses %}
+        <tr>
+          <td>{{ a.date_demande|date:"d/m/Y" }}</td>
+          <td>{% for t in a.types_analyses.all %}<span style="background:var(--primary-light);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:4px;">{{ t.code }}</span>{% endfor %}</td>
+          <td><span class="badge badge-{{ a.priorite }}">{{ a.get_priorite_display }}</span></td>
+          <td><span class="badge badge-{{ a.statut }}">{{ a.get_statut_display }}</span></td>
+          <td><a href="/laboratoire/{{ a.pk }}/" class="btn btn-outline btn-sm">Résultats</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Aucune analyse.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="tab-factures" style="display:none;">
+  <div class="card">
+    <div class="card-header"><h5>💰 Factures</h5>
+      {% if user.role in 'chef,comptable,receptionniste' %}<a href="/facturation/nouvelle/" class="btn btn-primary btn-sm">+ Nouvelle facture</a>{% endif %}
+    </div>
+    <table class="table-clinic">
+      <thead><tr><th>N° Facture</th><th>Date</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for f in factures %}
+        <tr>
+          <td style="font-weight:600;font-family:monospace;color:var(--primary);">{{ f.numero }}</td>
+          <td>{{ f.date_emission|date:"d/m/Y" }}</td>
+          <td style="font-weight:700;">{{ f.total|floatformat:0 }} FCFA</td>
+          <td><span class="badge badge-{{ f.statut }}">{{ f.get_statut_display }}</span></td>
+          <td><a href="/facturation/{{ f.pk }}/" class="btn btn-outline btn-sm">Voir</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Aucune facture.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="tab-dossier" style="display:none;">
+  <div class="card">
+    <div class="card-header"><h5>📁 Documents médicaux</h5>
+      {% if user.role in 'medecin,chef' %}<a href="/patients/{{ patient.pk }}/dossier/" class="btn btn-primary btn-sm">+ Ajouter</a>{% endif %}
+    </div>
+    <div class="card-body">
+      {% for d in dossiers %}
+      <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div style="font-weight:600;">{{ d.titre }} {% if d.confidentiel %}<span style="color:var(--danger);font-size:11px;">🔒</span>{% endif %}</div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ d.date|date:"d/m/Y" }} — {{ d.medecin.get_full_name }}</div>
+        </div>
+        <div style="font-size:13px;color:#444;margin-top:6px;line-height:1.6;">{{ d.contenu }}</div>
+      </div>
+      {% empty %}<p class="text-muted">Aucun document médical.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div id="tab-infos" style="display:none;">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h5>Informations médicales</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:12px;margin-bottom:12px;">
+          <div><div class="form-label">Groupe sanguin</div><strong>{{ patient.groupe_sanguin|default:"—" }}</strong></div>
+          <div><div class="form-label">Médecin traitant</div><strong>{% if patient.medecin_traitant %}Dr. {{ patient.medecin_traitant.last_name }}{% else %}—{% endif %}</strong></div>
+        </div>
+        <div class="divider"></div>
+        <div class="form-label">Allergies</div><p style="font-size:13px;">{{ patient.allergies|default:"Aucune connue" }}</p>
+        <div class="form-label mt-2">Antécédents médicaux</div><p style="font-size:13px;">{{ patient.antecedents|default:"—" }}</p>
+        <div class="form-label mt-2">Assurance</div><p style="font-size:13px;">{{ patient.assurance|default:"—"}} {% if patient.numero_assurance %}({{ patient.numero_assurance }}){% endif %}</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>Contact d'urgence & Profil</h5></div>
+      <div class="card-body">
+        <div class="form-label">Nom contact</div><strong>{{ patient.contact_urgence_nom|default:"—" }}</strong>
+        <div class="form-label mt-2">Téléphone</div><strong>{{ patient.contact_urgence_tel|default:"—" }}</strong>
+        <div class="divider"></div>
+        <div class="form-label">Genre</div><strong>{{ patient.utilisateur.get_genre_display|default:"—" }}</strong>
+        <div class="form-label mt-2">Date de naissance</div><strong>{{ patient.utilisateur.date_naissance|date:"d/m/Y"|default:"—" }}</strong>
+        <div class="form-label mt-2">Enregistré le</div><strong>{{ patient.created_at|date:"d/m/Y" }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(e, id) {
+  e.preventDefault();
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display='none');
+  document.getElementById('tab-'+id).style.display='block';
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+}
+</script>
+{% endblock %}

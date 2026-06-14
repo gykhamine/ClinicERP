@@ -1,0 +1,107 @@
+{% extends "base/base.html" %}
+{% block title %}URG-{{ passage.pk }}{% endblock %}
+{% block page_title %}Urgences — Dossier{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 style="display:flex;align-items:center;gap:12px;">
+      <span style="background:{{ passage.get_triage_color }};color:white;padding:6px 14px;border-radius:8px;font-size:16px;">P{{ passage.niveau_triage|default:"?" }}</span>
+      URG-{{ passage.pk }} — {{ passage.patient }}
+    </h1>
+    <div class="breadcrumb">Arrivée {{ passage.date_arrivee|date:"d/m/Y à H:i" }} {% if passage.duree_totale_minutes %} — {{ passage.duree_totale_minutes }} min{% endif %}</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    {% if passage.statut == 'attente_triage' %}<a href="/urgences/{{ passage.pk }}/triage/" class="btn btn-warning">🏷️ Trier</a>{% endif %}
+    {% if passage.statut == 'triage_fait' %}<a href="/urgences/{{ passage.pk }}/prise-en-charge/" class="btn btn-primary">🩺 Prendre en charge</a>{% endif %}
+    {% if passage.statut in 'en_cours,observation,triage_fait' %}<a href="/urgences/{{ passage.pk }}/sortie/" class="btn btn-success">🚪 Sortie</a>{% endif %}
+    <a href="/urgences/" class="btn btn-outline">← Urgences</a>
+  </div>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+  <div>
+    <!-- Infos patient -->
+    <div class="card mb-2" style="border-left:5px solid {{ passage.get_triage_color }};">
+      <div class="card-body">
+        <div style="display:flex;gap:16px;margin-bottom:14px;">
+          <div class="patient-avatar" style="width:52px;height:52px;font-size:20px;">{{ passage.patient.utilisateur.first_name.0 }}{{ passage.patient.utilisateur.last_name.0 }}</div>
+          <div>
+            <div style="font-weight:700;font-size:16px;">{{ passage.patient.utilisateur.get_full_name }}</div>
+            <div style="font-size:12px;color:var(--text-muted);">{{ passage.patient.numero_dossier }} {% if passage.patient.groupe_sanguin %}— 🩸 {{ passage.patient.groupe_sanguin }}{% endif %}</div>
+            {% if passage.patient.allergies %}<div style="font-size:12px;color:var(--danger);font-weight:600;">⚠️ Allergies : {{ passage.patient.allergies }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="form-label">Motif de venue</div>
+        <p style="font-weight:500;">{{ passage.motif_venue }}</p>
+        {% if passage.symptomes %}
+        <div class="form-label mt-2">Symptômes</div>
+        <p style="font-size:13px;">{{ passage.symptomes }}</p>
+        {% endif %}
+      </div>
+    </div>
+    <!-- Constantes -->
+    {% if passage.tension or passage.temperature or passage.frequence_cardiaque %}
+    <div class="card mb-2">
+      <div class="card-header"><h5>💓 Constantes au triage</h5></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
+          {% if passage.tension %}<div style="background:var(--primary-light);border-radius:8px;padding:10px;"><div style="font-size:18px;font-weight:700;color:var(--primary);">{{ passage.tension }}</div><div style="font-size:10px;color:var(--text-muted);">Tension</div></div>{% endif %}
+          {% if passage.temperature %}<div style="background:#fff3e0;border-radius:8px;padding:10px;"><div style="font-size:18px;font-weight:700;color:var(--warning);">{{ passage.temperature }}°C</div><div style="font-size:10px;color:var(--text-muted);">Température</div></div>{% endif %}
+          {% if passage.frequence_cardiaque %}<div style="background:#ffebee;border-radius:8px;padding:10px;"><div style="font-size:18px;font-weight:700;color:var(--danger);">{{ passage.frequence_cardiaque }}</div><div style="font-size:10px;color:var(--text-muted);">FC bpm</div></div>{% endif %}
+          {% if passage.saturation_o2 %}<div style="background:#e0f7f4;border-radius:8px;padding:10px;"><div style="font-size:18px;font-weight:700;color:var(--accent-dark);">{{ passage.saturation_o2 }}%</div><div style="font-size:10px;color:var(--text-muted);">SpO₂</div></div>{% endif %}
+          {% if passage.glasgow %}<div style="background:#f3e5f5;border-radius:8px;padding:10px;"><div style="font-size:18px;font-weight:700;color:#7b1fa2;">{{ passage.glasgow }}/15</div><div style="font-size:10px;color:var(--text-muted);">Glasgow</div></div>{% endif %}
+          {% if passage.frequence_respiratoire %}<div style="background:#e8f5e9;border-radius:8px;padding:10px;"><div style="font-size:18px;font-weight:700;color:var(--success);">{{ passage.frequence_respiratoire }}</div><div style="font-size:10px;color:var(--text-muted);">FR /min</div></div>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    <!-- Diagnostic & traitement -->
+    {% if passage.diagnostic %}
+    <div class="card">
+      <div class="card-header"><h5>🩺 Prise en charge médicale</h5></div>
+      <div class="card-body">
+        <div class="form-label">Diagnostic</div>
+        <p style="background:#e8f5e9;padding:10px;border-radius:8px;font-weight:500;">{{ passage.diagnostic }}</p>
+        {% if passage.traitement_urgence %}
+        <div class="form-label mt-2">Traitement effectué</div>
+        <p style="background:var(--primary-light);padding:10px;border-radius:8px;">{{ passage.traitement_urgence }}</p>
+        {% endif %}
+        {% if passage.observations %}<div class="form-label mt-2">Observations</div><p style="font-size:13px;">{{ passage.observations }}</p>{% endif %}
+        {% if passage.medecin_prise_en_charge %}<div class="form-label mt-2">Médecin</div><p>Dr. {{ passage.medecin_prise_en_charge.get_full_name }}</p>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div>
+    <!-- Timeline des actes -->
+    <div class="card">
+      <div class="card-header"><h5>📋 Actes et interventions</h5></div>
+      <div class="card-body" style="padding-bottom:0;">
+        <form method="post" action="/urgences/{{ passage.pk }}/acte/">
+          {% csrf_token %}
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <input type="text" name="description" class="form-control" placeholder="Ajouter un acte (perfusion, ECG, radio...)">
+            <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">+ Ajouter</button>
+          </div>
+        </form>
+        {% if actes %}
+        <div class="timeline" style="padding-left:28px;">
+          {% for acte in actes %}
+          <div class="timeline-item">
+            <div class="timeline-date">{{ acte.heure|time:"H:i" }} — {{ acte.realise_par.get_full_name }}</div>
+            <div class="timeline-content">
+              <div style="font-weight:600;font-size:13px;">{{ acte.description }}</div>
+              {% if acte.notes %}<div style="font-size:12px;color:var(--text-muted);">{{ acte.notes }}</div>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">Aucun acte enregistré.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

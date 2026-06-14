@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% block title %}Historique urgences{% endblock %}
+{% block page_title %}Historique des urgences{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📋 Historique urgences</h1></div><a href="/urgences/" class="btn btn-outline">← Tableau</a></div>
+<div class="card">
+  <table class="table-clinic">
+    <thead><tr><th>N°</th><th>Patient</th><th>Arrivée</th><th>Triage</th><th>Durée</th><th>Diagnostic</th><th>Sortie</th></tr></thead>
+    <tbody>
+      {% for p in passages %}
+      <tr>
+        <td><a href="/urgences/{{ p.pk }}/" style="font-weight:700;color:var(--primary);text-decoration:none;">URG-{{ p.pk }}</a></td>
+        <td><div style="font-weight:600;">{{ p.patient.utilisateur.get_full_name }}</div><div style="font-size:11px;color:var(--text-muted);">{{ p.patient.numero_dossier }}</div></td>
+        <td style="font-size:12px;">{{ p.date_arrivee|date:"d/m/Y H:i" }}</td>
+        <td>
+          {% if p.niveau_triage %}
+          <span style="background:{{ p.get_triage_color }};color:white;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">P{{ p.niveau_triage }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>{% if p.duree_totale_minutes %}{{ p.duree_totale_minutes }}min{% else %}—{% endif %}</td>
+        <td style="font-size:12px;color:var(--text-muted);">{{ p.diagnostic|truncatechars:40|default:"—" }}</td>
+        <td><span class="badge badge-{{ p.statut }}">{{ p.get_statut_display }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun passage.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

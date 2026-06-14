@@ -1,0 +1,48 @@
+{% extends "base/base.html" %}
+{% block title %}Paiement{% endblock %}
+{% block page_title %}Enregistrer un paiement{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💳 Paiement — {{ facture.numero }}</h1><div class="breadcrumb">{{ facture.patient }}</div></div><a href="/facturation/{{ facture.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Récapitulatif</h5></div>
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span class="text-muted">Patient</span><strong>{{ facture.patient.utilisateur.get_full_name }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span class="text-muted">Total facture</span><strong>{{ facture.total|floatformat:0 }} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span class="text-muted">Déjà payé</span>
+        <strong style="color:var(--success);">{% with p=facture.paiements.all %}{% if p %}{{ p.0.montant|floatformat:0 }}{% else %}0{% endif %}{% endwith %} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:16px 0;font-size:18px;">
+        <span style="font-weight:700;">Reste à payer</span><strong style="color:var(--danger);">{{ facture.total|floatformat:0 }} FCFA</strong>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Saisie du paiement</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label">Montant (FCFA) *</label><input type="number" name="montant" class="form-control" required step="0.01" value="{{ facture.total|floatformat:2 }}" min="1"></div>
+        <div class="mb-2">
+          <label class="form-label">Mode de paiement *</label>
+          <select name="mode" class="form-select" required>
+            <option value="especes">💵 Espèces</option>
+            <option value="mobile_money">📱 Mobile Money</option>
+            <option value="cheque">🏦 Chèque</option>
+            <option value="assurance">🛡️ Assurance</option>
+            <option value="virement">💳 Virement</option>
+          </select>
+        </div>
+        <div class="mb-2"><label class="form-label">Référence / N° transaction</label><input type="text" name="reference" class="form-control" placeholder="Optionnel"></div>
+        <div class="mb-3"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+        <button type="submit" class="btn btn-success btn-lg w-100">✅ Confirmer le paiement</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

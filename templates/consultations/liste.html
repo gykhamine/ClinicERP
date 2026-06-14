@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+{% block title %}Consultations{% endblock %}
+{% block page_title %}Consultations{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🩺 Consultations</h1><div class="breadcrumb">{{ consultations|length }} consultation(s)</div></div>
+  {% if user.role in 'medecin,chef' %}<a href="/consultations/nouvelle/" class="btn btn-primary">+ Nouvelle consultation</a>{% endif %}
+</div>
+<div class="card">
+  <table class="table-clinic">
+    <thead><tr><th>Date</th><th>Patient</th><th>Médecin</th><th>Diagnostic</th><th>Ordonnance</th><th></th></tr></thead>
+    <tbody>
+      {% for c in consultations %}
+      <tr>
+        <td style="white-space:nowrap;">{{ c.date|date:"d/m/Y H:i" }}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar">{{ c.patient.utilisateur.first_name.0 }}{{ c.patient.utilisateur.last_name.0 }}</div>
+            <a href="/patients/{{ c.patient.pk }}/" style="font-weight:600;color:var(--primary);text-decoration:none;">{{ c.patient.utilisateur.get_full_name }}</a>
+          </div>
+        </td>
+        <td>Dr. {{ c.medecin.last_name }}</td>
+        <td style="max-width:220px;color:var(--text-muted);">{{ c.diagnostic|truncatechars:50 }}</td>
+        <td>
+          {% if c.ordonnance %}
+            <span class="badge badge-termine">✅ Oui</span>
+          {% else %}
+            <span class="badge badge-brouillon">Non</span>
+          {% endif %}
+        </td>
+        <td><a href="/consultations/{{ c.pk }}/" class="btn btn-outline btn-sm">Voir →</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Aucune consultation.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

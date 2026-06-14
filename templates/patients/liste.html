@@ -1,0 +1,51 @@
+{% extends "base/base.html" %}
+{% block title %}Patients{% endblock %}
+{% block page_title %}Gestion des patients{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>👤 Patients</h1><div class="breadcrumb">{{ patients|length }} patient(s)</div></div>
+  <a href="/patients/nouveau/" class="btn btn-primary">+ Nouveau patient</a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <form method="get" style="display:flex;gap:10px;width:100%;">
+      <div class="search-bar" style="flex:1;">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Nom, prénom, numéro dossier...">
+      </div>
+      <button type="submit" class="btn btn-primary">Rechercher</button>
+      {% if q %}<a href="/patients/" class="btn btn-outline">✕ Effacer</a>{% endif %}
+    </form>
+  </div>
+  <table class="table-clinic">
+    <thead><tr><th>Patient</th><th>N° Dossier</th><th>Téléphone</th><th>Médecin traitant</th><th>Gr. Sanguin</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for p in patients %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar">{{ p.utilisateur.first_name.0 }}{{ p.utilisateur.last_name.0 }}</div>
+            <div>
+              <div style="font-weight:600;">{{ p.utilisateur.get_full_name }}</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ p.utilisateur.email }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span style="font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">{{ p.numero_dossier }}</span></td>
+        <td>{{ p.utilisateur.telephone|default:"—" }}</td>
+        <td>{% if p.medecin_traitant %}Dr. {{ p.medecin_traitant.last_name }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td>{% if p.groupe_sanguin %}<span style="font-weight:700;color:var(--primary);">{{ p.groupe_sanguin }}</span>{% else %}—{% endif %}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/patients/{{ p.pk }}/" class="btn btn-outline btn-sm">Dossier</a>
+            <a href="/patients/{{ p.pk }}/modifier/" class="btn btn-primary btn-sm">Modifier</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun patient trouvé.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

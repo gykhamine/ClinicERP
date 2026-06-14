@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+{% block title %}Gérer les congés{% endblock %}
+{% block page_title %}Gestion des congés{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📋 Demandes de congés</h1><div class="breadcrumb">{{ conges|length }} en attente</div></div></div>
+<div class="card">
+  <table class="table-clinic">
+    <thead><tr><th>Personnel</th><th>Type</th><th>Période</th><th>Durée</th><th>Motif</th><th>Décision</th></tr></thead>
+    <tbody>
+      {% for c in conges %}
+      <tr>
+        <td><div style="font-weight:600;">{{ c.personnel.utilisateur.get_full_name }}</div><div style="font-size:11px;color:var(--text-muted);">{{ c.personnel.poste }}</div></td>
+        <td>{{ c.get_type_conge_display }}</td>
+        <td>{{ c.date_debut|date:"d/m/Y" }} → {{ c.date_fin|date:"d/m/Y" }}</td>
+        <td><strong>{{ c.duree_jours }} j</strong></td>
+        <td style="color:var(--text-muted);font-size:12px;">{{ c.motif|truncatechars:40 }}</td>
+        <td>
+          <form method="post" style="display:flex;gap:6px;">
+            {% csrf_token %}
+            <input type="hidden" name="conge_id" value="{{ c.pk }}">
+            <button type="submit" name="decision" value="approuve" class="btn btn-success btn-sm">✅ Approuver</button>
+            <button type="submit" name="decision" value="refuse" class="btn btn-danger btn-sm">❌ Refuser</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Aucune demande en attente.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

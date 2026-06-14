@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+{% block title %}Mouvement stock{% endblock %}
+{% block page_title %}Mouvement de stock{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📦 Mouvement de stock</h1><div class="breadcrumb">{{ medicament.nom }} {{ medicament.dosage }}</div></div><a href="/pharmacie/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Stock actuel</h5></div>
+    <div class="card-body" style="text-align:center;padding:32px;">
+      <div style="font-size:56px;font-weight:700;{% if medicament.en_rupture %}color:var(--danger);{% else %}color:var(--success);{% endif %}">{{ medicament.stock }}</div>
+      <div style="color:var(--text-muted);margin-top:8px;">unités disponibles</div>
+      <div style="margin-top:12px;font-size:13px;color:var(--text-muted);">Minimum : {{ medicament.stock_minimum }}</div>
+      {% if medicament.en_rupture %}<div class="alert alert-danger mt-2">⚠️ Stock en dessous du seuil minimum</div>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Enregistrer un mouvement</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">Type de mouvement *</label>
+          <select name="type_mouvement" class="form-select" required>
+            <option value="entree">📥 Entrée (réception commande)</option>
+            <option value="sortie">📤 Sortie (dispensation)</option>
+            <option value="ajustement">🔄 Ajustement d'inventaire</option>
+          </select>
+        </div>
+        <div class="mb-2"><label class="form-label">Quantité *</label><input type="number" name="quantite" class="form-control" required min="1" placeholder="Nombre d'unités"></div>
+        <div class="mb-3"><label class="form-label">Motif *</label><textarea name="motif" class="form-control" rows="2" required placeholder="Commande fournisseur, ordonnance #, inventaire..."></textarea></div>
+        <button type="submit" class="btn btn-primary w-100">📦 Enregistrer le mouvement</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

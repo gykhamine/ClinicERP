@@ -1,0 +1,111 @@
+{% extends "base/base.html" %}
+{% block title %}Hospitalisation {{ hosp.patient }}{% endblock %}
+{% block page_title %}Dossier d'hospitalisation{% endblock %}
+{% block content %}
+<div class="patient-header">
+  <div class="patient-avatar">{{ hosp.patient.utilisateur.first_name.0 }}{{ hosp.patient.utilisateur.last_name.0 }}</div>
+  <div style="flex:1;">
+    <div class="patient-name">{{ hosp.patient.utilisateur.get_full_name }}</div>
+    <div class="patient-meta">
+      <span class="patient-meta-item">📋 {{ hosp.patient.numero_dossier }}</span>
+      <span class="patient-meta-item">🏥 {{ hosp.service.nom }}</span>
+      <span class="patient-meta-item">🛏️ Ch.{{ hosp.lit.chambre.numero }} — Lit {{ hosp.lit.numero }}</span>
+      {% if hosp.medecin_responsable %}<span class="patient-meta-item">🩺 Dr. {{ hosp.medecin_responsable.last_name }}</span>{% endif %}
+      <span class="patient-meta-item">📅 J+{{ hosp.duree_jours }}</span>
+    </div>
+  </div>
+  <span class="badge badge-{{ hosp.statut }}" style="font-size:14px;padding:6px 14px;">{{ hosp.get_statut_display }}</span>
+  <div style="display:flex;gap:8px;flex-direction:column;">
+    {% if hosp.statut == 'en_cours' %}
+    <a href="/hospitalisation/{{ hosp.pk }}/suivi/" class="btn btn-primary btn-sm">+ Suivi quotidien</a>
+    <a href="/hospitalisation/{{ hosp.pk }}/transfert/" class="btn btn-outline btn-sm">🔄 Transfert</a>
+    <a href="/hospitalisation/{{ hosp.pk }}/sortie/" class="btn btn-warning btn-sm">🚪 Sortie</a>
+    {% endif %}
+    <a href="/patients/{{ hosp.patient.pk }}/" class="btn btn-outline btn-sm">📁 Dossier patient</a>
+  </div>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+  <div>
+    <!-- Infos admission -->
+    <div class="card mb-2">
+      <div class="card-header"><h5>📋 Informations d'admission</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:12px;">
+          <div><div class="form-label">Mode d'entrée</div><strong>{{ hosp.get_mode_entree_display }}</strong></div>
+          <div><div class="form-label">Date d'entrée</div><strong>{{ hosp.date_entree|date:"d/m/Y à H:i" }}</strong></div>
+          {% if hosp.date_sortie_prevue %}<div><div class="form-label">Sortie prévue</div><strong>{{ hosp.date_sortie_prevue|date:"d/m/Y" }}</strong></div>{% endif %}
+          {% if hosp.date_sortie_reelle %}<div><div class="form-label">Sortie réelle</div><strong>{{ hosp.date_sortie_reelle|date:"d/m/Y H:i" }}</strong></div>{% endif %}
+        </div>
+        <div class="divider"></div>
+        <div class="form-label">Motif d'hospitalisation</div>
+        <p>{{ hosp.motif_hospitalisation }}</p>
+        {% if hosp.diagnostic_entree %}
+        <div class="form-label mt-2">Diagnostic d'entrée</div>
+        <p style="background:var(--primary-light);padding:10px;border-radius:8px;">{{ hosp.diagnostic_entree }}</p>
+        {% endif %}
+        {% if hosp.diagnostic_sortie %}
+        <div class="form-label mt-2">Diagnostic de sortie</div>
+        <p style="background:#e8f5e9;padding:10px;border-radius:8px;">{{ hosp.diagnostic_sortie }}</p>
+        {% endif %}
+        {% if hosp.compte_rendu_sortie %}
+        <div class="form-label mt-2">Compte-rendu de sortie</div>
+        <p style="font-size:13px;">{{ hosp.compte_rendu_sortie }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Transferts -->
+    {% if transferts %}
+    <div class="card">
+      <div class="card-header"><h5>🔄 Historique des transferts</h5></div>
+      <div class="card-body">
+        {% for t in transferts %}
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:20px;">🔄</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;">{{ t.service_origine }} → {{ t.service_destination }}</div>
+            <div style="font-size:12px;color:var(--text-muted);">{{ t.date|date:"d/m/Y H:i" }} — {{ t.motif }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <!-- Suivis quotidiens -->
+    <div class="card">
+      <div class="card-header">
+        <h5>📊 Suivis quotidiens ({{ suivis|length }})</h5>
+        {% if hosp.statut == 'en_cours' %}<a href="/hospitalisation/{{ hosp.pk }}/suivi/" class="btn btn-primary btn-sm">+ Ajouter</a>{% endif %}
+      </div>
+      <div style="max-height:500px;overflow-y:auto;">
+        {% for s in suivis %}
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);">{{ s.date|date:"d/m/Y à H:i" }} — Dr. {{ s.medecin.last_name }}</div>
+          </div>
+          <!-- Constantes -->
+          {% if s.tension or s.temperature or s.frequence_cardiaque %}
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+            {% if s.tension %}<span style="background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">❤️ {{ s.tension }}</span>{% endif %}
+            {% if s.temperature %}<span style="background:#fff3e0;color:var(--warning);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">🌡️ {{ s.temperature }}°C</span>{% endif %}
+            {% if s.frequence_cardiaque %}<span style="background:#ffebee;color:var(--danger);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">💓 {{ s.frequence_cardiaque }}bpm</span>{% endif %}
+            {% if s.saturation_o2 %}<span style="background:#e0f7f4;color:var(--accent-dark);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">O₂ {{ s.saturation_o2 }}%</span>{% endif %}
+          </div>
+          {% endif %}
+          <div style="font-size:13px;"><strong>Évolution :</strong> {{ s.evolution }}</div>
+          {% if s.traitement_en_cours %}<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Traitement : {{ s.traitement_en_cours }}</div>{% endif %}
+          {% if s.prescriptions_nouvelles %}<div style="font-size:12px;color:var(--primary);margin-top:4px;font-weight:600;">Nouvelles prescriptions : {{ s.prescriptions_nouvelles }}</div>{% endif %}
+          {% if s.observations %}<div style="font-size:12px;color:var(--text-muted);margin-top:4px;font-style:italic;">{{ s.observations }}</div>{% endif %}
+        </div>
+        {% empty %}
+        <div style="text-align:center;padding:32px;color:var(--text-muted);">Aucun suivi enregistré.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+{% block title %}Nouvelle consultation{% endblock %}
+{% block page_title %}Nouvelle consultation{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🩺 Nouvelle consultation</h1>
+    {% if rdv %}<div class="breadcrumb">RDV avec {{ rdv.patient }} — {{ rdv.date_heure|date:"d/m/Y H:i" }}</div>{% endif %}
+  </div>
+  <a href="/consultations/rdv/" class="btn btn-outline">← Retour</a>
+</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>Patient & Constantes</h5></div>
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label">Patient *</label>
+            <select name="patient" class="form-select" required {% if rdv %}disabled{% endif %}>
+              {% for p in patients %}
+              <option value="{{ p.pk }}" {% if rdv and rdv.patient == p %}selected{% elif patient_initial == p %}selected{% endif %}>
+                {{ p.utilisateur.get_full_name }} ({{ p.numero_dossier }})
+              </option>
+              {% endfor %}
+            </select>
+            {% if rdv %}<input type="hidden" name="patient" value="{{ rdv.patient.pk }}">{% endif %}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;">
+            <div><label class="form-label">Tension</label><input type="text" name="tension" class="form-control" placeholder="120/80"></div>
+            <div><label class="form-label">Temp. (°C)</label><input type="number" name="temperature" class="form-control" step="0.1" placeholder="37.5"></div>
+            <div><label class="form-label">FC (bpm)</label><input type="number" name="frequence_cardiaque" class="form-control" placeholder="80"></div>
+            <div><label class="form-label">Poids (kg)</label><input type="number" name="poids" class="form-control" step="0.1" placeholder="70"></div>
+            <div><label class="form-label">Taille (cm)</label><input type="number" name="taille" class="form-control" step="0.1" placeholder="170"></div>
+            <div><label class="form-label">SpO2 (%)</label><input type="number" name="saturation_o2" class="form-control" placeholder="98"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>Suivi</h5></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <input type="checkbox" name="suivi_requis" id="suivi" style="width:16px;height:16px;">
+            <label for="suivi" style="font-size:13px;cursor:pointer;">Suivi requis</label>
+          </div>
+          <div><label class="form-label">Date de suivi</label><input type="date" name="date_suivi" class="form-control"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-header"><h5>Données cliniques</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Motif de consultation *</label><textarea name="motif" class="form-control" rows="2" required placeholder="Raison de la consultation..."></textarea></div>
+          <div class="mb-2"><label class="form-label">Symptômes *</label><textarea name="symptomes" class="form-control" rows="3" required placeholder="Symptômes rapportés par le patient..."></textarea></div>
+          <div class="mb-2"><label class="form-label">Examen clinique *</label><textarea name="examen_clinique" class="form-control" rows="3" required placeholder="Résultats de l'examen physique..."></textarea></div>
+          <div class="mb-2"><label class="form-label">Diagnostic *</label><textarea name="diagnostic" class="form-control" rows="2" required placeholder="Diagnostic posé..."></textarea></div>
+          <div class="mb-2"><label class="form-label">Traitement *</label><textarea name="traitement" class="form-control" rows="3" required placeholder="Prescription et traitement..."></textarea></div>
+          <div class="mb-2"><label class="form-label">Observations</label><textarea name="observations" class="form-control" rows="2" placeholder="Notes complémentaires..."></textarea></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+    <a href="/consultations/rdv/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">✅ Enregistrer la consultation</button>
+  </div>
+</form>
+{% endblock %}

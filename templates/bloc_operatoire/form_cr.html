@@ -1,0 +1,44 @@
+{% extends "base/base.html" %}
+{% block title %}Compte-rendu opératoire{% endblock %}
+{% block page_title %}Compte-rendu opératoire{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📝 Compte-rendu — OP-{{ prog.pk }}</h1><div class="breadcrumb">{{ prog.patient }} — {{ prog.type_intervention.nom }}</div></div><a href="/bloc/{{ prog.pk }}/" class="btn btn-outline">← Dossier</a></div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div class="card">
+      <div class="card-header"><h5>⏱️ Chronologie</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:14px;">
+          <div><label class="form-label">Début d'intervention *</label><input type="datetime-local" name="date_debut" class="form-control" required value="{% if cr %}{{ cr.date_debut|date:'Y-m-d' }}T{{ cr.date_debut|time:'H:i' }}{% endif %}"></div>
+          <div><label class="form-label">Fin d'intervention *</label><input type="datetime-local" name="date_fin" class="form-control" required value="{% if cr %}{{ cr.date_fin|date:'Y-m-d' }}T{{ cr.date_fin|time:'H:i' }}{% endif %}"></div>
+          <div><label class="form-label">Pertes sanguines (ml)</label><input type="number" name="pertes_sanguines_ml" class="form-control" value="{{ cr.pertes_sanguines_ml|default:'' }}"></div>
+          <div style="display:flex;align-items:center;gap:8px;padding-top:24px;">
+            <input type="checkbox" name="transfusion" id="transfusion" {% if cr.transfusion %}checked{% endif %} style="width:18px;height:18px;">
+            <label for="transfusion" style="font-size:13px;font-weight:500;cursor:pointer;">Transfusion effectuée</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>⚕️ Détails opératoires</h5></div>
+      <div class="card-body">
+        <div class="mb-2"><label class="form-label">Technique utilisée *</label><textarea name="technique_utilisee" class="form-control" rows="4" required placeholder="Décrivez la technique chirurgicale utilisée, voies d'abord, étapes...">{{ cr.technique_utilisee|default:'' }}</textarea></div>
+        <div class="mb-2"><label class="form-label">Incidents / Complications</label><textarea name="incidents" class="form-control" rows="2" placeholder="Saignements, difficultés techniques, conversion... (laisser vide si aucun)">{{ cr.incidents|default:'' }}</textarea></div>
+        <div><label class="form-label">Produits / Matériels utilisés</label><textarea name="produits_utilises" class="form-control" rows="2" placeholder="Fils de suture, prothèses, drains...">{{ cr.produits_utilises|default:'' }}</textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>🏥 Post-opératoire</h5></div>
+      <div class="card-body">
+        <div class="mb-2"><label class="form-label">Suites opératoires prévues</label><textarea name="suites_operatoires" class="form-control" rows="3" placeholder="Salle de réveil, surveillance, durée hospitalsation post-op...">{{ cr.suites_operatoires|default:'' }}</textarea></div>
+        <div><label class="form-label">Prescriptions post-opératoires</label><textarea name="prescriptions_postop" class="form-control" rows="3" placeholder="Antalgiques, antibiotiques, anticoagulants, soins...">{{ cr.prescriptions_postop|default:'' }}</textarea></div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+    <a href="/bloc/{{ prog.pk }}/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">📝 Enregistrer le compte-rendu</button>
+  </div>
+</form>
+{% endblock %}

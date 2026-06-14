@@ -1,0 +1,100 @@
+{% extends "base/base.html" %}
+{% block title %}OP-{{ prog.pk }}{% endblock %}
+{% block page_title %}Dossier opératoire{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🏥 OP-{{ prog.pk }} — {{ prog.type_intervention.nom }}</h1>
+    <div class="breadcrumb">{{ prog.patient }} • {{ prog.date_heure_prevue|date:"d/m/Y à H:i" }} • Dr. {{ prog.chirurgien_principal.last_name }}</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="/bloc/{{ prog.pk }}/checklist/" class="btn btn-outline">✅ Checklist</a>
+    {% if not compte_rendu %}<a href="/bloc/{{ prog.pk }}/compte-rendu/" class="btn btn-primary">📝 Compte-rendu</a>{% endif %}
+    <a href="/bloc/" class="btn btn-outline">← Planning</a>
+  </div>
+</div>
+<div class="grid-2" style="align-items:start;">
+  <div>
+    <div class="card mb-2">
+      <div class="card-header"><h5>📋 Programme opératoire</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:14px;font-size:13px;">
+          <div><div class="form-label">Patient</div><strong>{{ prog.patient.utilisateur.get_full_name }}</strong></div>
+          <div><div class="form-label">Intervention</div><strong>{{ prog.type_intervention.nom }}</strong></div>
+          <div><div class="form-label">Chirurgien</div><strong>Dr. {{ prog.chirurgien_principal.get_full_name }}</strong></div>
+          {% if prog.anesthesiste %}<div><div class="form-label">Anesthésiste</div><strong>Dr. {{ prog.anesthesiste.get_full_name }}</strong></div>{% endif %}
+          <div><div class="form-label">Salle</div><strong>{% if prog.salle %}{{ prog.salle.numero }} — {{ prog.salle.nom }}{% else %}—{% endif %}</strong></div>
+          <div><div class="form-label">Durée prévue</div><strong>{{ prog.duree_prevue_minutes }} min</strong></div>
+          <div><div class="form-label">Niveau d'urgence</div><strong>{{ prog.get_niveau_urgence_display }}</strong></div>
+          <div><div class="form-label">Statut</div><span class="badge badge-{% if prog.statut == 'termine' %}termine{% elif prog.statut == 'en_cours' %}confirme{% elif prog.statut == 'annule' %}annule{% else %}attente{% endif %}">{{ prog.get_statut_display }}</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="form-label">Indication chirurgicale</div>
+        <p>{{ prog.indication }}</p>
+        {% if prog.technique_prevue %}<div class="form-label mt-2">Technique prévue</div><p style="font-size:13px;">{{ prog.technique_prevue }}</p>{% endif %}
+        {% if prog.materiel_special %}<div class="form-label mt-2">Matériel spécial</div><p style="font-size:13px;">{{ prog.materiel_special }}</p>{% endif %}
+      </div>
+    </div>
+    <!-- Checklist summary -->
+    {% if checklist %}
+    <div class="card">
+      <div class="card-header"><h5>✅ Checklist préopératoire</h5></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+          <div style="position:relative;width:64px;height:64px;">
+            <svg viewBox="0 0 36 36" style="width:64px;height:64px;transform:rotate(-90deg)">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="{% if checklist.score_completion == 100 %}#2e7d32{% elif checklist.score_completion > 60 %}#f57c00{% else %}#e53935{% endif %}" stroke-width="3" stroke-dasharray="{{ checklist.score_completion }} 100"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">{{ checklist.score_completion }}%</div>
+          </div>
+          <div>
+            <div style="font-weight:600;">{% if checklist.score_completion == 100 %}✅ Checklist complète{% else %}⚠️ Checklist incomplète{% endif %}</div>
+            {% if checklist.date_validation %}<div style="font-size:12px;color:var(--text-muted);">Validée le {{ checklist.date_validation|date:"d/m/Y H:i" }}</div>{% endif %}
+          </div>
+        </div>
+        <a href="/bloc/{{ prog.pk }}/checklist/" class="btn btn-outline w-100">Voir / Modifier la checklist</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div>
+    {% if compte_rendu %}
+    <div class="card">
+      <div class="card-header"><h5>📝 Compte-rendu opératoire</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:12px;font-size:13px;margin-bottom:14px;">
+          <div><div class="form-label">Début</div><strong>{{ compte_rendu.date_debut|date:"d/m/Y H:i" }}</strong></div>
+          <div><div class="form-label">Fin</div><strong>{{ compte_rendu.date_fin|date:"d/m/Y H:i" }}</strong></div>
+          <div><div class="form-label">Durée réelle</div><strong>{{ compte_rendu.duree_reelle_minutes }} min</strong></div>
+          {% if compte_rendu.pertes_sanguines_ml %}<div><div class="form-label">Pertes sanguines</div><strong>{{ compte_rendu.pertes_sanguines_ml }} ml</strong></div>{% endif %}
+          <div><div class="form-label">Transfusion</div><strong>{% if compte_rendu.transfusion %}Oui{% else %}Non{% endif %}</strong></div>
+        </div>
+        <div class="form-label">Technique utilisée</div>
+        <p style="font-size:13px;">{{ compte_rendu.technique_utilisee }}</p>
+        {% if compte_rendu.incidents %}
+        <div class="form-label mt-2" style="color:var(--danger);">Incidents / Complications</div>
+        <p style="font-size:13px;background:#ffebee;padding:10px;border-radius:8px;">{{ compte_rendu.incidents }}</p>
+        {% endif %}
+        {% if compte_rendu.suites_operatoires %}
+        <div class="form-label mt-2">Suites opératoires</div>
+        <p style="font-size:13px;">{{ compte_rendu.suites_operatoires }}</p>
+        {% endif %}
+        {% if compte_rendu.prescriptions_postop %}
+        <div class="form-label mt-2">Prescriptions post-op</div>
+        <p style="font-size:13px;background:var(--primary-light);padding:10px;border-radius:8px;">{{ compte_rendu.prescriptions_postop }}</p>
+        {% endif %}
+        <a href="/bloc/{{ prog.pk }}/compte-rendu/" class="btn btn-outline btn-sm mt-2">✏️ Modifier</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:32px;">
+        <div style="font-size:40px;margin-bottom:12px;">📝</div>
+        <p class="text-muted">Compte-rendu opératoire non encore rédigé.</p>
+        <a href="/bloc/{{ prog.pk }}/compte-rendu/" class="btn btn-primary mt-2">Rédiger le compte-rendu</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base/base.html" %}
+{% block title %}Nouveau RDV{% endblock %}
+{% block page_title %}Nouveau rendez-vous{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📅 Nouveau rendez-vous</h1></div>
+  <a href="/consultations/rdv/" class="btn btn-outline">← Retour</a>
+</div>
+<div class="card" style="max-width:700px;">
+  <div class="card-header"><h5>Planifier un rendez-vous</h5></div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:16px;">
+        <div>
+          <label class="form-label">Patient *</label>
+          <select name="patient" class="form-select" required>
+            <option value="">— Sélectionner —</option>
+            {% for p in patients %}<option value="{{ p.pk }}">{{ p.utilisateur.get_full_name }} ({{ p.numero_dossier }})</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Médecin *</label>
+          <select name="medecin" class="form-select" required>
+            <option value="">— Sélectionner —</option>
+            {% for m in medecins %}<option value="{{ m.pk }}">Dr. {{ m.get_full_name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Date et heure *</label>
+          <input type="datetime-local" name="date_heure" class="form-control" required>
+        </div>
+        <div>
+          <label class="form-label">Statut initial</label>
+          <select name="statut" class="form-select">
+            <option value="attente">En attente</option>
+            <option value="confirme">Confirmé</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label class="form-label">Motif de consultation *</label>
+        <textarea name="motif" class="form-control" rows="3" required placeholder="Décrivez le motif du rendez-vous..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/consultations/rdv/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">📅 Créer le rendez-vous</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% block title %}Prise en charge{% endblock %}
+{% block page_title %}Prise en charge médicale{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🩺 Prise en charge — {{ passage.patient }}</h1><div class="breadcrumb">P{{ passage.niveau_triage }} — {{ passage.motif_venue|truncatechars:50 }}</div></div><a href="/urgences/{{ passage.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:800px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;margin-bottom:16px;">
+        <div>
+          <label class="form-label">Statut *</label>
+          <select name="statut" class="form-select" required>
+            <option value="en_cours">En cours de prise en charge</option>
+            <option value="observation">Mise en observation</option>
+            <option value="hospitalise">À hospitaliser</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-2"><label class="form-label">Diagnostic *</label><textarea name="diagnostic" class="form-control" rows="3" required placeholder="Diagnostic posé après examen clinique..."></textarea></div>
+      <div class="mb-2"><label class="form-label">Traitement d'urgence</label><textarea name="traitement_urgence" class="form-control" rows="3" placeholder="Médicaments, soins, perfusion, oxygène..."></textarea></div>
+      <div class="mb-2"><label class="form-label">Acte principal effectué</label><input type="text" name="acte_desc" class="form-control" placeholder="ECG, radio, suture, perfusion IV..."></div>
+      <div class="mb-3"><label class="form-label">Observations</label><textarea name="observations" class="form-control" rows="2"></textarea></div>
+      <button type="submit" class="btn btn-primary btn-lg w-100">🩺 Enregistrer la prise en charge</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base/base.html" %}
+{% block title %}Ajouter lits{% endblock %}
+{% block page_title %}Ajouter chambre & lits{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🛏️ Ajouter des lits</h1><div class="breadcrumb">Service : {{ service.nom }}</div></div><a href="/hospitalisation/structure/" class="btn btn-outline">← Structure</a></div>
+<div class="card" style="max-width:500px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;">
+        <div><label class="form-label">N° de chambre *</label><input type="text" name="num_chambre" class="form-control" required placeholder="101, A1..."></div>
+        <div><label class="form-label">Type de chambre</label>
+          <select name="type_chambre" class="form-select">
+            <option value="standard">Standard</option>
+            <option value="semi_prive">Semi-privée</option>
+            <option value="prive">Privée</option>
+            <option value="soins_intensifs">Soins intensifs</option>
+            <option value="isolation">Isolement</option>
+          </select>
+        </div>
+        <div><label class="form-label">Étage</label><input type="number" name="etage" class="form-control" value="1" min="0"></div>
+        <div><label class="form-label">Nombre de lits *</label><input type="number" name="nb_lits" class="form-control" value="2" min="1" max="10" required></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/hospitalisation/structure/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">🛏️ Créer la chambre</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

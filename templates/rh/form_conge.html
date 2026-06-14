@@ -1,0 +1,20 @@
+{% extends "base/base.html" %}
+{% block title %}Demande de congé{% endblock %}
+{% block page_title %}Demande de congé{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🌴 Demande de congé</h1></div><a href="/rh/conge/mes/" class="btn btn-outline">← Mes congés</a></div>
+<div class="card" style="max-width:600px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-2"><label class="form-label">Type de congé *</label><select name="type_conge" class="form-select" required><option value="annuel">Congé annuel</option><option value="maladie">Congé maladie</option><option value="maternite">Maternité</option><option value="paternite">Paternité</option><option value="autre">Autre</option></select></div>
+      <div class="grid-2" style="gap:14px;margin-bottom:16px;">
+        <div><label class="form-label">Date de début *</label><input type="date" name="date_debut" class="form-control" required></div>
+        <div><label class="form-label">Date de fin *</label><input type="date" name="date_fin" class="form-control" required></div>
+      </div>
+      <div class="mb-3"><label class="form-label">Motif *</label><textarea name="motif" class="form-control" rows="3" required placeholder="Raison de la demande..."></textarea></div>
+      <button type="submit" class="btn btn-primary w-100">📩 Soumettre la demande</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

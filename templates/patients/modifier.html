@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+{% block title %}Modifier patient{% endblock %}
+{% block page_title %}Modifier patient{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>✏️ Modifier le dossier</h1><div class="breadcrumb">{{ patient }}</div></div>
+  <a href="/patients/{{ patient.pk }}/" class="btn btn-outline">← Retour</a>
+</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div class="card mb-2">
+      <div class="card-header"><h5>Identité</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:14px;">
+          <div><label class="form-label">Prénom</label><input type="text" name="first_name" class="form-control" value="{{ patient.utilisateur.first_name }}"></div>
+          <div><label class="form-label">Nom</label><input type="text" name="last_name" class="form-control" value="{{ patient.utilisateur.last_name }}"></div>
+          <div><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ patient.utilisateur.email }}"></div>
+          <div><label class="form-label">Téléphone</label><input type="text" name="telephone" class="form-control" value="{{ patient.utilisateur.telephone }}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-2">
+      <div class="card-header"><h5>Médical</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:14px;">
+          <div>
+            <label class="form-label">Groupe sanguin</label>
+            <select name="groupe_sanguin" class="form-select">
+              <option value="">—</option>
+              {% for v, l in choices %}<option value="{{ v }}" {% if patient.groupe_sanguin == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Médecin traitant</label>
+            <select name="medecin_traitant" class="form-select">
+              <option value="">—</option>
+              {% for m in medecins %}<option value="{{ m.pk }}" {% if patient.medecin_traitant == m %}selected{% endif %}>Dr. {{ m.get_full_name }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="mt-2"><label class="form-label">Allergies</label><textarea name="allergies" class="form-control" rows="2">{{ patient.allergies }}</textarea></div>
+        <div class="mt-2"><label class="form-label">Antécédents</label><textarea name="antecedents" class="form-control" rows="3">{{ patient.antecedents }}</textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>Assurance</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:14px;">
+          <div><label class="form-label">Assurance</label><input type="text" name="assurance" class="form-control" value="{{ patient.assurance }}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>Contact d'urgence</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:14px;">
+          <div><label class="form-label">Nom</label><input type="text" name="contact_urgence_nom" class="form-control" value="{{ patient.contact_urgence_nom }}"></div>
+          <div><label class="form-label">Téléphone</label><input type="text" name="contact_urgence_tel" class="form-control" value="{{ patient.contact_urgence_tel }}"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+    <a href="/patients/{{ patient.pk }}/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+  </div>
+</form>
+{% endblock %}

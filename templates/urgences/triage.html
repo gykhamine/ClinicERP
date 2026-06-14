@@ -1,0 +1,73 @@
+{% extends "base/base.html" %}
+{% block title %}Triage{% endblock %}
+{% block page_title %}Triage infirmier{% endblock %}
+{% block extra_css %}
+<style>
+.triage-btn { padding:20px; border-radius:12px; border:none; cursor:pointer; color:white; font-weight:700; font-size:15px; transition:transform .15s, box-shadow .15s; width:100%; text-align:left; }
+.triage-btn:hover { transform:scale(1.02); box-shadow:0 6px 20px rgba(0,0,0,.2); }
+.triage-btn.selected { box-shadow:0 0 0 4px rgba(255,255,255,0.8), 0 0 0 6px currentColor; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🏷️ Triage — {{ passage.patient }}</h1><div class="breadcrumb">Arrivée à {{ passage.date_arrivee|time:"H:i" }} — Motif : {{ passage.motif_venue }}</div></div><a href="/urgences/{{ passage.pk }}/" class="btn btn-outline">← Retour</a></div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <!-- Niveaux de triage -->
+      <div class="card mb-2">
+        <div class="card-header"><h5>Niveau de triage (Échelle Manchester) *</h5></div>
+        <div class="card-body" style="display:grid;gap:10px;">
+          {% for val, label in triage_choices %}
+          <label style="cursor:pointer;">
+            <input type="radio" name="niveau_triage" value="{{ val }}" required style="display:none;" onchange="selectTriage(this)">
+            <div class="triage-btn" id="triage-btn-{{ val }}" style="background:{% if val == 1 %}#c62828{% elif val == 2 %}#e65100{% elif val == 3 %}#f9a825{% elif val == 4 %}#2e7d32{% else %}#546e7a{% endif %};">
+              <div style="font-size:22px;margin-bottom:4px;">{% if val == 1 %}🔴{% elif val == 2 %}🟠{% elif val == 3 %}🟡{% elif val == 4 %}🟢{% else %}⚪{% endif %} {{ label }}</div>
+              <div style="font-size:12px;opacity:0.85;font-weight:400;">
+                {% if val == 1 %}Menace vitale immédiate — prise en charge immédiate
+                {% elif val == 2 %}Situation très urgente — prise en charge < 20 min
+                {% elif val == 3 %}Urgence relative — prise en charge < 60 min
+                {% elif val == 4 %}Peu urgent — prise en charge < 2h
+                {% else %}Non urgent — prise en charge < 4h{% endif %}
+              </div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div>
+      <!-- Constantes -->
+      <div class="card mb-2">
+        <div class="card-header"><h5>💓 Constantes vitales</h5></div>
+        <div class="card-body">
+          <div class="grid-2" style="gap:12px;">
+            <div><label class="form-label">Tension (mmHg)</label><input type="text" name="tension" class="form-control" placeholder="120/80"></div>
+            <div><label class="form-label">Température (°C)</label><input type="number" name="temperature" class="form-control" step="0.1"></div>
+            <div><label class="form-label">FC (bpm)</label><input type="number" name="frequence_cardiaque" class="form-control"></div>
+            <div><label class="form-label">SpO₂ (%)</label><input type="number" name="saturation_o2" class="form-control"></div>
+            <div><label class="form-label">FR (/min)</label><input type="number" name="frequence_respiratoire" class="form-control"></div>
+            <div><label class="form-label">Glasgow (3–15)</label><input type="number" name="glasgow" class="form-control" min="3" max="15"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Symptômes -->
+      <div class="card">
+        <div class="card-header"><h5>Symptômes observés</h5></div>
+        <div class="card-body">
+          <textarea name="symptomes" class="form-control" rows="4" placeholder="Symptômes rapportés ou observés à l'examen initial...">{{ passage.symptomes }}</textarea>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <button type="submit" class="btn btn-primary btn-lg w-100">🏷️ Valider le triage</button>
+      </div>
+    </div>
+  </div>
+</form>
+<script>
+function selectTriage(input) {
+  document.querySelectorAll('.triage-btn').forEach(b => b.style.outline='none');
+  document.getElementById('triage-btn-'+input.value).style.outline='4px solid white';
+}
+</script>
+{% endblock %}

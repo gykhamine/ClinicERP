@@ -1,0 +1,66 @@
+{% extends "base/base.html" %}
+{% block title %}Pharmacie{% endblock %}
+{% block page_title %}Pharmacie — Stock{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>💊 Pharmacie</h1><div class="breadcrumb">Gestion des médicaments et du stock</div></div>
+  <div style="display:flex;gap:8px;">
+    {% if user.role in 'pharmacien,chef' %}
+    <a href="/pharmacie/nouveau/" class="btn btn-primary">+ Médicament</a>
+    {% endif %}
+    <a href="/pharmacie/historique/" class="btn btn-outline">📦 Historique</a>
+  </div>
+</div>
+
+<!-- Alertes rupture -->
+{% with ruptures=medicaments %}
+{% for m in medicaments %}{% if m.en_rupture and forloop.first %}
+<div class="alert alert-warning">⚠️ Certains médicaments sont en dessous du stock minimum — vérifiez les alertes ci-dessous.</div>
+{% endif %}{% endfor %}
+{% endwith %}
+
+<div class="card">
+  <div class="card-header">
+    <form method="get" style="display:flex;gap:10px;">
+      <div class="search-bar" style="flex:1;">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Nom, générique...">
+      </div>
+      <a href="/pharmacie/?alerte=1" class="btn btn-warning btn-sm" style="white-space:nowrap;">⚠️ Alertes stock</a>
+      <button type="submit" class="btn btn-primary">Chercher</button>
+    </form>
+  </div>
+  <table class="table-clinic">
+    <thead><tr><th>Médicament</th><th>Forme</th><th>Catégorie</th><th>Stock</th><th>Min.</th><th>Prix vente</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for m in medicaments %}
+      <tr {% if m.en_rupture %}style="background:#fff5f5;"{% endif %}>
+        <td>
+          <div style="font-weight:600;">{{ m.nom }}</div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ m.dosage }}{% if m.nom_generique %} • {{ m.nom_generique }}{% endif %}</div>
+        </td>
+        <td>{{ m.get_forme_display }}</td>
+        <td>{% if m.categorie %}{{ m.categorie }}{% else %}—{% endif %}</td>
+        <td>
+          <span style="font-weight:700;font-size:16px;{% if m.en_rupture %}color:var(--danger);{% else %}color:var(--success);{% endif %}">
+            {{ m.stock }}
+          </span>
+          {% if m.en_rupture %}<span style="font-size:10px;color:var(--danger);display:block;">⚠️ Rupture</span>{% endif %}
+        </td>
+        <td style="color:var(--text-muted);">{{ m.stock_minimum }}</td>
+        <td style="font-weight:600;">{{ m.prix_vente|floatformat:0 }} FCFA</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            {% if user.role in 'pharmacien,chef' %}
+            <a href="/pharmacie/{{ m.pk }}/mouvement/" class="btn btn-outline btn-sm">📦 Mouvement</a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun médicament.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

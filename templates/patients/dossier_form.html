@@ -1,0 +1,27 @@
+{% extends "base/base.html" %}
+{% block title %}Ajouter document{% endblock %}
+{% block page_title %}Ajouter document médical{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📁 Nouveau document</h1><div class="breadcrumb">{{ patient }}</div></div>
+  <a href="/patients/{{ patient.pk }}/" class="btn btn-outline">← Retour</a>
+</div>
+<div class="card" style="max-width:700px;">
+  <div class="card-header"><h5>Ajouter au dossier médical</h5></div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-2"><label class="form-label">Titre du document *</label><input type="text" name="titre" class="form-control" required placeholder="Compte-rendu opératoire, Note de suivi..."></div>
+      <div class="mb-2"><label class="form-label">Contenu *</label><textarea name="contenu" class="form-control" rows="8" required placeholder="Rédigez le contenu du document..."></textarea></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+        <input type="checkbox" name="confidentiel" id="confidentiel" style="width:16px;height:16px;">
+        <label for="confidentiel" style="font-size:13px;cursor:pointer;">🔒 Document confidentiel (visible uniquement par les médecins)</label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <a href="/patients/{{ patient.pk }}/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">📁 Ajouter au dossier</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

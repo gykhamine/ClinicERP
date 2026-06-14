@@ -1,0 +1,47 @@
+{% extends "base/base.html" %}
+{% block title %}Saisir résultats{% endblock %}
+{% block page_title %}Saisir les résultats{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🔬 Saisir les résultats</h1><div class="breadcrumb">{{ demande.patient }} — {{ demande.date_demande|date:"d/m/Y" }}</div></div>
+  <a href="/laboratoire/" class="btn btn-outline">← Retour</a>
+</div>
+<div class="card mb-2" style="border-left:4px solid var(--primary);">
+  <div class="card-body">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;">
+      <div><strong>Patient :</strong> {{ demande.patient.utilisateur.get_full_name }}</div>
+      <div><strong>Prescrit par :</strong> Dr. {{ demande.medecin_prescripteur.last_name }}</div>
+      <div><strong>Priorité :</strong> <span class="badge badge-{{ demande.priorite }}">{{ demande.get_priorite_display }}</span></div>
+      {% if demande.notes_cliniques %}<div><strong>Notes cliniques :</strong> {{ demande.notes_cliniques }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+<form method="post">
+  {% csrf_token %}
+  {% for ta in demande.types_analyses.all %}
+  <div class="card mb-2">
+    <div class="card-header">
+      <h5>{{ ta.code }} — {{ ta.nom }}</h5>
+      {% if ta.valeurs_normales %}<span style="font-size:12px;color:var(--text-muted);">Normes : {{ ta.valeurs_normales }}</span>{% endif %}
+    </div>
+    <div class="card-body">
+      <div class="grid-2" style="gap:14px;">
+        <div><label class="form-label">Valeur / Résultat *</label><textarea name="valeur_{{ ta.pk }}" class="form-control" rows="2" placeholder="Résultat de l'analyse..."></textarea></div>
+        <div>
+          <div><label class="form-label">Unité</label><input type="text" name="unite_{{ ta.pk }}" class="form-control" placeholder="g/dL, mmol/L..."></div>
+          <div class="mt-2"><label class="form-label">Interprétation</label><input type="text" name="interp_{{ ta.pk }}" class="form-control" placeholder="Normal, Élevé, Abaissé..."></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+        <input type="checkbox" name="anormal_{{ ta.pk }}" id="anormal_{{ ta.pk }}" style="width:16px;height:16px;">
+        <label for="anormal_{{ ta.pk }}" style="font-size:13px;cursor:pointer;color:var(--danger);">⚠️ Résultat anormal</label>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+    <a href="/laboratoire/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">✅ Valider les résultats</button>
+  </div>
+</form>
+{% endblock %}

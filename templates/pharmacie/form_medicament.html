@@ -1,0 +1,31 @@
+{% extends "base/base.html" %}
+{% block title %}Nouveau médicament{% endblock %}
+{% block page_title %}Nouveau médicament{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💊 Nouveau médicament</h1></div><a href="/pharmacie/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:700px;">
+  <div class="card-header"><h5>Ajouter au stock</h5></div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;">
+        <div><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required placeholder="Amoxicilline"></div>
+        <div><label class="form-label">Nom générique</label><input type="text" name="nom_generique" class="form-control"></div>
+        <div><label class="form-label">Catégorie</label><input type="text" name="categorie_nom" class="form-control" list="cats" placeholder="Antibiotiques..."><datalist id="cats">{% for c in categories %}<option value="{{ c.nom }}">{% endfor %}</datalist></div>
+        <div><label class="form-label">Forme</label><select name="forme" class="form-select"><option value="comprime">Comprimé</option><option value="sirop">Sirop</option><option value="injection">Injection</option><option value="creme">Crème</option><option value="gouttes">Gouttes</option><option value="autre">Autre</option></select></div>
+        <div><label class="form-label">Dosage *</label><input type="text" name="dosage" class="form-control" required placeholder="500mg"></div>
+        <div><label class="form-label">Fournisseur</label><input type="text" name="fournisseur" class="form-control"></div>
+        <div><label class="form-label">Stock initial</label><input type="number" name="stock" class="form-control" value="0" min="0"></div>
+        <div><label class="form-label">Stock minimum</label><input type="number" name="stock_minimum" class="form-control" value="20" min="0"></div>
+        <div><label class="form-label">Prix d'achat (FCFA)</label><input type="number" name="prix_achat" class="form-control" value="0" step="0.01"></div>
+        <div><label class="form-label">Prix de vente (FCFA)</label><input type="number" name="prix_vente" class="form-control" value="0" step="0.01"></div>
+        <div><label class="form-label">Date d'expiration</label><input type="date" name="date_expiration" class="form-control"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/pharmacie/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">✅ Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

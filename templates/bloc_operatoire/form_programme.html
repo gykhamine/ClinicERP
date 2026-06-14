@@ -1,0 +1,89 @@
+{% extends "base/base.html" %}
+{% block title %}Programmer opération{% endblock %}
+{% block page_title %}Programmer une opération{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📋 Programmer une opération</h1></div><a href="/bloc/" class="btn btn-outline">← Planning</a></div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>Patient & Intervention</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Patient *</label>
+            <select name="patient" class="form-select" required>
+              <option value="">— Sélectionner —</option>
+              {% for p in patients %}<option value="{{ p.pk }}">{{ p.utilisateur.get_full_name }} ({{ p.numero_dossier }})</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Type d'intervention *</label>
+            <select name="type_intervention" class="form-select" required>
+              <option value="">— Sélectionner —</option>
+              {% for t in types %}<option value="{{ t.pk }}">{{ t.code }} — {{ t.nom }} (~{{ t.duree_estimee_minutes }}min)</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Indication chirurgicale *</label><textarea name="indication" class="form-control" rows="3" required placeholder="Raison de l'intervention, contexte clinique..."></textarea></div>
+          <div><label class="form-label">Technique prévue</label><textarea name="technique_prevue" class="form-control" rows="2" placeholder="Voie d'abord, technique envisagée..."></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>Matériel & Urgence</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Matériel spécial</label><input type="text" name="materiel_special" class="form-control" placeholder="Prothèse, implant, instrumentation spécifique..."></div>
+          <div><label class="form-label">Niveau d'urgence</label>
+            <select name="niveau_urgence" class="form-select">
+              <option value="elective">Électif (programmé)</option>
+              <option value="urgent">⚠️ Urgent</option>
+              <option value="urgence_vitale">🚨 Urgence vitale</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>Équipe & Planning</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Chirurgien principal *</label>
+            <select name="chirurgien_principal" class="form-select" required>
+              <option value="">— Sélectionner —</option>
+              {% for c in chirurgiens %}<option value="{{ c.pk }}">Dr. {{ c.get_full_name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Anesthésiste</label>
+            <select name="anesthesiste" class="form-select">
+              <option value="">— Sélectionner —</option>
+              {% for c in chirurgiens %}<option value="{{ c.pk }}">Dr. {{ c.get_full_name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Salle d'opération</label>
+            <select name="salle" class="form-select">
+              <option value="">— Attribuer plus tard —</option>
+              {% for s in salles %}<option value="{{ s.pk }}">{{ s.numero }} — {{ s.nom }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Date & heure *</label><input type="datetime-local" name="date_heure_prevue" class="form-control" required></div>
+            <div><label class="form-label">Durée estimée (min)</label><input type="number" name="duree_prevue_minutes" class="form-control" value="60" min="15"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>Pré-requis</h5></div>
+        <div class="card-body" style="display:grid;gap:10px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="consentement_signe" style="width:16px;height:16px;"> <span style="font-size:13px;">Consentement éclairé signé</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="bilan_preop_valide" style="width:16px;height:16px;"> <span style="font-size:13px;">Bilan préopératoire validé</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+    <a href="/bloc/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">📋 Programmer l'opération</button>
+  </div>
+</form>
+{% endblock %}

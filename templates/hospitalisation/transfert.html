@@ -1,0 +1,31 @@
+{% extends "base/base.html" %}
+{% block title %}Transfert{% endblock %}
+{% block page_title %}Transfert de service{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🔄 Transfert — {{ hosp.patient }}</h1><div class="breadcrumb">Service actuel : {{ hosp.service.nom }} — Lit {{ hosp.lit.numero }}</div></div><a href="/hospitalisation/{{ hosp.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:700px;">
+  <div class="card-header"><h5>Transfert vers un autre service / lit</h5></div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Lit de destination * ({{ lits_libres|length }} disponibles)</label>
+        <select name="lit_destination" class="form-select" required>
+          <option value="">— Sélectionner un lit libre —</option>
+          {% regroup lits_libres by chambre.service as lits_par_service %}
+          {% for sg in lits_par_service %}
+          <optgroup label="{{ sg.grouper.nom }}">
+            {% for lit in sg.list %}
+            <option value="{{ lit.pk }}">Ch.{{ lit.chambre.numero }} — Lit {{ lit.numero }} ({{ lit.chambre.get_type_chambre_display }})</option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3"><label class="form-label">Motif du transfert *</label><textarea name="motif" class="form-control" rows="3" required placeholder="Raison du transfert (nécessité de soins spécifiques, disponibilité, demande patient...)"></textarea></div>
+      <div class="alert alert-info">ℹ️ L'ancien lit sera mis en nettoyage. Le dossier d'hospitalisation sera mis à jour automatiquement.</div>
+      <button type="submit" class="btn btn-primary w-100">🔄 Confirmer le transfert</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

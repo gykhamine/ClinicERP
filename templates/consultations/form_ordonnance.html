@@ -1,0 +1,70 @@
+{% extends "base/base.html" %}
+{% block title %}Créer ordonnance{% endblock %}
+{% block page_title %}Nouvelle ordonnance{% endblock %}
+{% block extra_css %}
+<style>
+.ligne-ordo { background:#f7fafc; border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:10px; position:relative; }
+.ligne-ordo .remove-btn { position:absolute; top:10px; right:10px; background:var(--danger); color:white; border:none; border-radius:6px; width:26px; height:26px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>💊 Nouvelle ordonnance</h1><div class="breadcrumb">Pour {{ consultation.patient }}</div></div>
+  <a href="/consultations/{{ consultation.pk }}/" class="btn btn-outline">← Retour</a>
+</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>Paramètres</h5></div>
+        <div class="card-body">
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Validité (jours)</label><input type="number" name="validite_jours" class="form-control" value="30" min="1" max="365"></div>
+          </div>
+          <div class="mt-2"><label class="form-label">Instructions générales</label><textarea name="instructions" class="form-control" rows="2" placeholder="Prendre les médicaments après les repas..."></textarea></div>
+        </div>
+      </div>
+      <div class="card" style="background:var(--primary-light);border:1px solid var(--primary);">
+        <div class="card-body">
+          <div style="font-size:13px;"><strong>Patient :</strong> {{ consultation.patient }}</div>
+          <div style="font-size:13px;margin-top:4px;"><strong>Médecin :</strong> Dr. {{ consultation.medecin.get_full_name }}</div>
+          <div style="font-size:13px;margin-top:4px;"><strong>Diagnostic :</strong> {{ consultation.diagnostic }}</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h5>Médicaments prescrits</h5>
+          <button type="button" onclick="ajouterLigne()" class="btn btn-accent btn-sm">+ Ajouter</button>
+        </div>
+        <div class="card-body" id="lignes-container">
+          <div class="ligne-ordo">
+            <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+            <div class="grid-2" style="gap:10px;">
+              <div><label class="form-label">Médicament *</label><input type="text" name="medicament[]" class="form-control" required placeholder="Paracétamol 500mg"></div>
+              <div><label class="form-label">Dosage</label><input type="text" name="dosage[]" class="form-control" placeholder="1 comprimé"></div>
+              <div><label class="form-label">Fréquence</label><input type="text" name="frequence[]" class="form-control" placeholder="3x/jour"></div>
+              <div><label class="form-label">Durée</label><input type="text" name="duree[]" class="form-control" placeholder="5 jours"></div>
+              <div><label class="form-label">Quantité</label><input type="number" name="quantite[]" class="form-control" value="1" min="1"></div>
+              <div><label class="form-label">Instructions</label><input type="text" name="instructions_ligne[]" class="form-control" placeholder="Après repas..."></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);">
+          <button type="submit" class="btn btn-primary w-100">💊 Créer l'ordonnance</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<script>
+function ajouterLigne() {
+  const tpl = document.querySelector('.ligne-ordo').cloneNode(true);
+  tpl.querySelectorAll('input').forEach(i => i.value = '');
+  tpl.querySelector('input[name="quantite[]"]').value = '1';
+  document.getElementById('lignes-container').appendChild(tpl);
+}
+</script>
+{% endblock %}

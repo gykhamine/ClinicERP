@@ -1,0 +1,95 @@
+{% extends "base/base.html" %}
+{% block title %}Checklist préopératoire{% endblock %}
+{% block page_title %}Checklist préopératoire{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>✅ Checklist — OP-{{ prog.pk }}</h1><div class="breadcrumb">{{ prog.patient }} — {{ prog.type_intervention.nom }}</div></div><a href="/bloc/{{ prog.pk }}/" class="btn btn-outline">← Dossier</a></div>
+{% if checklist %}<div class="alert alert-{% if checklist.score_completion == 100 %}success{% else %}warning{% endif %}">{% if checklist.score_completion == 100 %}✅ Checklist 100% complète{% else %}⚠️ Checklist {{ checklist.score_completion }}% — {{ 100|add:"-checklist.score_completion" }} élément(s) manquant(s){% endif %}</div>{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>👤 Identité & Consentement</h5></div>
+        <div class="card-body" style="display:grid;gap:12px;">
+          {% for field, label in checks_identite %}
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;{% if checklist and field_val %}background:#e8f5e9;{% endif %}">
+            <input type="checkbox" name="{{ field }}" {% if checklist %}{% if checklist|get_attr:field %}checked{% endif %}{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>🔬 Bilan préopératoire</h5></div>
+        <div class="card-body" style="display:grid;gap:12px;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="bilan_sanguin_ok" {% if checklist.bilan_sanguin_ok %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Bilan sanguin validé (NFS, coag, groupe)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="ecg_ok" {% if checklist.ecg_ok %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">ECG pré-anesthésique validé</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="radiologie_ok" {% if checklist.radiologie_ok %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Imagerie disponible et validée</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>🏥 Préparation patient</h5></div>
+        <div class="card-body" style="display:grid;gap:12px;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="identite_verifiee" {% if checklist.identite_verifiee %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Identité patient vérifiée (bracelet)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="site_marque" {% if checklist.site_marque %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Site opératoire marqué / côté vérifié</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="allergie_verifiee" {% if checklist.allergie_verifiee %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Allergies vérifiées et documentées</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="jeun_verifie" {% if checklist.jeun_verifie %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Jeûne préopératoire vérifié (≥6h)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="consentement_present" {% if checklist.consentement_present %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Consentement éclairé signé présent</span>
+          </label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>⚕️ Équipe & Matériel</h5></div>
+        <div class="card-body" style="display:grid;gap:12px;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="voie_veineuse_posee" {% if checklist.voie_veineuse_posee %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Voie veineuse périphérique posée</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="antibioprophylaxie" {% if checklist.antibioprophylaxie %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Antibioprophylaxie administrée</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="materiel_verifie" {% if checklist.materiel_verifie %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Matériel chirurgical stérilisé et complet</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:8px;">
+            <input type="checkbox" name="equipe_complete" {% if checklist.equipe_complete %}checked{% endif %} style="width:18px;height:18px;">
+            <span style="font-size:13px;font-weight:500;">Équipe chirurgicale au complet</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px;"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2">{% if checklist %}{{ checklist.notes }}{% endif %}</textarea></div>
+  <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+    <a href="/bloc/{{ prog.pk }}/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">✅ Enregistrer la checklist</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base/base.html" %}
+{% block title %}Facturation{% endblock %}
+{% block page_title %}Facturation{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>💰 Facturation</h1></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/facturation/services/" class="btn btn-outline">⚙️ Services</a>
+    <a href="/facturation/nouvelle/" class="btn btn-primary">+ Nouvelle facture</a>
+  </div>
+</div>
+
+<div class="grid-stats mb-3">
+  <div class="stat-card"><div class="stat-icon bg-primary-soft">📄</div>
+    <div><div class="stat-value">{{ factures|length }}</div><div class="stat-label">Factures totales</div></div>
+  </div>
+  <div class="stat-card"><div class="stat-icon bg-success-soft">✅</div>
+    <div><div class="stat-value" style="color:var(--success);">{{ total_paye|floatformat:0 }}</div><div class="stat-label">FCFA encaissés</div></div>
+  </div>
+  <div class="stat-card"><div class="stat-icon bg-warning-soft">⏳</div>
+    <div><div class="stat-value" style="color:var(--warning);">{{ total_emis|floatformat:0 }}</div><div class="stat-label">FCFA émis</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <form method="get" style="display:flex;gap:10px;">
+      <select name="statut" class="form-select" style="width:160px;" onchange="this.form.submit()">
+        <option value="">Tous les statuts</option>
+        <option value="brouillon" {% if statut_filtre == 'brouillon' %}selected{% endif %}>Brouillon</option>
+        <option value="emise" {% if statut_filtre == 'emise' %}selected{% endif %}>Émise</option>
+        <option value="partiel" {% if statut_filtre == 'partiel' %}selected{% endif %}>Partiel</option>
+        <option value="payee" {% if statut_filtre == 'payee' %}selected{% endif %}>Payée</option>
+        <option value="annulee" {% if statut_filtre == 'annulee' %}selected{% endif %}>Annulée</option>
+      </select>
+    </form>
+  </div>
+  <table class="table-clinic">
+    <thead><tr><th>N° Facture</th><th>Patient</th><th>Date</th><th>Montant</th><th>Payé</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for f in factures %}
+      <tr>
+        <td><a href="/facturation/{{ f.pk }}/" style="font-weight:700;font-family:monospace;color:var(--primary);text-decoration:none;">{{ f.numero }}</a></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar">{{ f.patient.utilisateur.first_name.0 }}{{ f.patient.utilisateur.last_name.0 }}</div>
+            {{ f.patient.utilisateur.get_full_name }}
+          </div>
+        </td>
+        <td style="font-size:12px;">{{ f.date_emission|date:"d/m/Y" }}</td>
+        <td style="font-weight:700;">{{ f.total|floatformat:0 }} FCFA</td>
+        <td style="color:var(--success);font-weight:600;">
+          {% with paid=f.paiements.all %}
+          {% if paid %}{{ paid.0.montant|floatformat:0 }} FCFA{% else %}—{% endif %}
+          {% endwith %}
+        </td>
+        <td><span class="badge badge-{{ f.statut }}">{{ f.get_statut_display }}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/facturation/{{ f.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+            {% if f.statut == 'brouillon' %}
+            <form method="post" action="/facturation/{{ f.pk }}/emettre/" style="display:inline;">{% csrf_token %}<button type="submit" class="btn btn-primary btn-sm">Émettre</button></form>
+            {% elif f.statut in 'emise,partiel' %}
+            <a href="/facturation/{{ f.pk }}/paiement/" class="btn btn-success btn-sm">💳 Payer</a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucune facture.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

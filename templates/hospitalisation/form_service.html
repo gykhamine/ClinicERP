@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+{% block title %}Nouveau service{% endblock %}
+{% block page_title %}Nouveau service{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🏥 Nouveau service</h1></div><a href="/hospitalisation/structure/" class="btn btn-outline">← Structure</a></div>
+<div class="card" style="max-width:600px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;">
+        <div><label class="form-label">Nom du service *</label><input type="text" name="nom" class="form-control" required placeholder="Médecine Générale"></div>
+        <div><label class="form-label">Code *</label><input type="text" name="code" class="form-control" required placeholder="MG" style="text-transform:uppercase;"></div>
+        <div><label class="form-label">Bâtiment</label><input type="text" name="batiment" class="form-control" list="bats" placeholder="Bâtiment A..."><datalist id="bats">{% for b in batiments %}<option value="{{ b.nom }}">{% endfor %}</datalist></div>
+        <div><label class="form-label">Capacité (lits)</label><input type="number" name="capacite" class="form-control" value="10" min="1"></div>
+      </div>
+      <div class="mt-2"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/hospitalisation/structure/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">✅ Créer le service</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base/base.html" %}
+{% block title %}Rapport Financier{% endblock %}
+{% block page_title %}Rapport Financier{% endblock %}
+{% block extra_css %}<style>canvas{max-height:260px;}</style>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>💰 Rapport Financier</h1></div>
+  <div style="display:flex;gap:8px;">
+    <form method="get" style="display:flex;gap:8px;align-items:center;">
+      <label class="form-label" style="margin:0;white-space:nowrap;">Période :</label>
+      <select name="periode" class="form-select" style="width:140px;" onchange="this.form.submit()">
+        <option value="7" {% if periode == '7' %}selected{% endif %}>7 jours</option>
+        <option value="30" {% if periode == '30' %}selected{% endif %}>30 jours</option>
+        <option value="90" {% if periode == '90' %}selected{% endif %}>90 jours</option>
+        <option value="365" {% if periode == '365' %}selected{% endif %}>12 mois</option>
+      </select>
+    </form>
+    <a href="/rapports/pdf/financier/" class="btn btn-primary">⬇ Exporter PDF</a>
+    <a href="/rapports/" class="btn btn-outline">← Retour</a>
+  </div>
+</div>
+
+<div class="grid-stats mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">📄</div>
+    <div><div class="stat-value" style="font-size:18px;">{{ total_facture|floatformat:0 }}</div><div class="stat-label">FCFA facturés</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-success-soft">✅</div>
+    <div><div class="stat-value" style="font-size:18px;color:var(--success);">{{ total_paye|floatformat:0 }}</div><div class="stat-label">FCFA encaissés</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-danger-soft">⏳</div>
+    <div><div class="stat-value" style="font-size:18px;color:var(--danger);">{{ total_impaye|floatformat:0 }}</div><div class="stat-label">FCFA impayés</div></div>
+  </div>
+</div>
+
+<div class="grid-2 mb-3">
+  <div class="card">
+    <div class="card-header"><h5>💳 Paiements par mode</h5></div>
+    <div class="card-body"><canvas id="chartModes"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>📊 Taux de recouvrement</h5></div>
+    <div class="card-body" style="display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:220px;">
+      {% if total_facture > 0 %}
+      {% widthratio total_paye total_facture 100 as taux %}
+      <div style="position:relative;width:160px;height:160px;">
+        <canvas id="chartTaux"></canvas>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+          <div style="font-size:32px;font-weight:700;color:var(--primary);">{{ taux }}%</div>
+          <div style="font-size:11px;color:var(--text-muted);">recouvré</div>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted">Aucune donnée.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h5>📄 Détail des factures ({{ factures|length }})</h5></div>
+  <table class="table-clinic">
+    <thead><tr><th>N° Facture</th><th>Patient</th><th>Date</th><th>Montant</th><th>Mode</th><th>Statut</th></tr></thead>
+    <tbody>
+      {% for f in factures %}
+      <tr>
+        <td><a href="/facturation/{{ f.pk }}/" style="font-weight:700;font-family:monospace;color:var(--primary);text-decoration:none;">{{ f.numero }}</a></td>
+        <td>{{ f.patient.utilisateur.get_full_name }}</td>
+        <td>{{ f.date_emission|date:"d/m/Y" }}</td>
+        <td style="font-weight:600;">{{ f.total|floatformat:0 }} FCFA</td>
+        <td>{{ f.get_mode_paiement_display|default:"—" }}</td>
+        <td><span class="badge badge-{{ f.statut }}">{{ f.get_statut_display }}</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Aucune facture sur cette période.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const parMode = {{ par_mode|safe }};
+const labels = Object.keys(parMode);
+const vals = labels.map(k => parMode[k]);
+const palette = ['#0F6B8A','#00BFA5','#F57C00','#E53935','#7b1fa2'];
+
+if (labels.length) {
+  new Chart(document.getElementById('chartModes'), {
+    type: 'pie',
+    data: { labels, datasets:[{ data:vals, backgroundColor:palette, borderWidth:2 }] },
+    options: { responsive:true, plugins:{legend:{position:'right'}} }
+  });
+}
+
+{% if total_facture > 0 %}
+const taux = {{ total_paye }} / {{ total_facture }} * 100;
+new Chart(document.getElementById('chartTaux'), {
+  type: 'doughnut',
+  data: {
+    datasets:[{
+      data: [taux, 100-taux],
+      backgroundColor:['#0F6B8A','#e2e8f0'],
+      borderWidth:0
+    }]
+  },
+  options: { cutout:'75%', plugins:{legend:{display:false}}, rotation:-90, circumference:180 }
+});
+{% endif %}
+</script>
+{% endblock %}

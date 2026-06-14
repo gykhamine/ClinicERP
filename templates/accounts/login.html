@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion — ClinicERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-visual">
+    <div style="text-align:center;max-width:400px;">
+      <div style="font-size:72px;margin-bottom:24px;">🏥</div>
+      <h1 style="color:white;font-size:32px;font-weight:700;margin-bottom:12px;">ClinicERP</h1>
+      <p style="color:rgba(255,255,255,0.7);font-size:16px;line-height:1.7;">Gestion complète de votre clinique — dossiers patients, consultations, pharmacie, laboratoire, facturation et ressources humaines.</p>
+      <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;justify-content:center;">
+        {% for label, icon in forloop.parentloop|default:"" %}{% endfor %}
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;color:rgba(255,255,255,0.8);font-size:13px;">🩺 Médecins</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;color:rgba(255,255,255,0.8);font-size:13px;">💊 Pharmacie</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;color:rgba(255,255,255,0.8);font-size:13px;">🔬 Labo</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;color:rgba(255,255,255,0.8);font-size:13px;">💰 Facturation</div>
+      </div>
+      <div style="margin-top:48px;color:rgba(255,255,255,0.3);font-size:12px;">Powered by Gykhamine Concept Investigation</div>
+    </div>
+  </div>
+  <div class="login-form-panel">
+    <div style="width:100%;max-width:340px;">
+      <div style="text-align:center;margin-bottom:36px;">
+        <div style="width:52px;height:52px;background:var(--primary);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;">🏥</div>
+        <h2 style="font-size:22px;font-weight:700;color:var(--text);">Connexion</h2>
+        <p style="color:var(--text-muted);font-size:14px;margin-top:6px;">Accédez à votre espace de travail</p>
+      </div>
+      {% if messages %}{% for msg in messages %}
+      <div class="alert alert-danger">❌ {{ msg }}</div>
+      {% endfor %}{% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:18px;">
+          <label class="form-label">Nom d'utilisateur</label>
+          <input type="text" name="username" class="form-control" placeholder="ex: dr_ngoma" autofocus required>
+        </div>
+        <div style="margin-bottom:24px;">
+          <label class="form-label">Mot de passe</label>
+          <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-100">Se connecter →</button>
+      </form>
+      <div style="margin-top:32px;background:#f7fafc;border-radius:10px;padding:16px;font-size:12px;color:var(--text-muted);">
+        <div style="font-weight:600;margin-bottom:8px;color:var(--text);">Comptes de démonstration :</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <span>👑 chef / chef123</span><span>🩺 dr_ngoma / med123</span>
+          <span>💊 pharmacien / pharma123</span><span>🔬 laborantin / labo123</span>
+          <span>📋 reception / recep123</span><span>👤 patient1 / patient123</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

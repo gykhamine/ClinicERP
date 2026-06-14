@@ -1,0 +1,40 @@
+{% extends "base/base.html" %}
+{% block title %}Types d'intervention{% endblock %}
+{% block page_title %}Types d'intervention{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📋 Types d'intervention</h1></div><a href="/bloc/" class="btn btn-outline">← Planning</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Catalogue ({{ types|length }})</h5></div>
+    <table class="table-clinic">
+      <thead><tr><th>Code</th><th>Intervention</th><th>Spécialité</th><th>Durée</th></tr></thead>
+      <tbody>
+        {% for t in types %}
+        <tr>
+          <td><span style="font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">{{ t.code }}</span></td>
+          <td><div style="font-weight:600;">{{ t.nom }}</div></td>
+          <td style="color:var(--text-muted);font-size:12px;">{{ t.specialite|default:"—" }}</td>
+          <td>~{{ t.duree_estimee_minutes }} min</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Aucun type d'intervention.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Ajouter un type</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required placeholder="Appendicectomie"></div>
+        <div class="grid-2" style="gap:14px;margin-bottom:14px;">
+          <div><label class="form-label">Code *</label><input type="text" name="code" class="form-control" required placeholder="APPEN" style="text-transform:uppercase;"></div>
+          <div><label class="form-label">Durée estimée (min)</label><input type="number" name="duree_estimee_minutes" class="form-control" value="60" min="15"></div>
+        </div>
+        <div class="mb-2"><label class="form-label">Spécialité</label><input type="text" name="specialite" class="form-control" placeholder="Chirurgie digestive"></div>
+        <div class="mb-3"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+        <button type="submit" class="btn btn-primary w-100">+ Ajouter</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

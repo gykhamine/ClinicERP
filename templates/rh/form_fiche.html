@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+{% block title %}Nouvelle fiche{% endblock %}
+{% block page_title %}Nouvelle fiche personnel{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📋 Nouvelle fiche personnel</h1></div><a href="/rh/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:700px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;">
+        <div class="grid-2" style="grid-column:span 2;gap:14px;">
+          <div><label class="form-label">Utilisateur *</label><select name="utilisateur" class="form-select" required><option value="">— Sélectionner —</option>{% for u in utilisateurs %}<option value="{{ u.pk }}">{{ u.get_full_name }} ({{ u.get_role_display }})</option>{% endfor %}</select></div>
+          <div><label class="form-label">Département</label><input type="text" name="departement" class="form-control" list="depts" placeholder="Médecine, Pharmacie..."><datalist id="depts">{% for d in departements %}<option value="{{ d.nom }}">{% endfor %}</datalist></div>
+        </div>
+        <div><label class="form-label">Poste *</label><input type="text" name="poste" class="form-control" required placeholder="Médecin généraliste"></div>
+        <div><label class="form-label">Type de contrat</label><select name="type_contrat" class="form-select"><option value="cdi">CDI</option><option value="cdd">CDD</option><option value="stage">Stage</option><option value="consultant">Consultant</option></select></div>
+        <div><label class="form-label">Date d'embauche *</label><input type="date" name="date_embauche" class="form-control" required></div>
+        <div><label class="form-label">Salaire de base (FCFA)</label><input type="number" name="salaire_base" class="form-control" value="0"></div>
+        <div><label class="form-label">Diplôme</label><input type="text" name="diplome" class="form-control" placeholder="Doctorat en médecine"></div>
+        <div><label class="form-label">Spécialisation</label><input type="text" name="specialisation" class="form-control"></div>
+        <div><label class="form-label">N° Ordre professionnel</label><input type="text" name="numero_ordre" class="form-control"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/rh/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">✅ Créer la fiche</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base/base.html" %}
+{% block title %}Planning{% endblock %}
+{% block page_title %}Planning du personnel{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📅 Planning du personnel</h1></div><a href="/rh/" class="btn btn-outline">← Personnel</a></div>
+<div class="card">
+  <div class="card-header"><h5>Vue hebdomadaire</h5></div>
+  <div style="overflow-x:auto;">
+    <table class="table-clinic" style="min-width:900px;">
+      <thead>
+        <tr>
+          <th>Personnel</th>
+          <th>Lundi</th><th>Mardi</th><th>Mercredi</th><th>Jeudi</th><th>Vendredi</th><th>Samedi</th><th>Dimanche</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in fiches %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ f.utilisateur.get_full_name }}</div>
+            <div style="font-size:11px;color:var(--text-muted);">{{ f.poste }}</div>
+          </td>
+          {% for jour in "0123456" %}
+          <td style="text-align:center;">
+            {% for p in f.plannings.all %}
+              {% if p.jour_semaine|stringformat:"s" == jour %}
+              <div style="background:var(--primary-light);color:var(--primary);padding:4px 6px;border-radius:6px;font-size:12px;font-weight:600;">
+                {{ p.heure_debut|time:"H:i" }}–{{ p.heure_fin|time:"H:i" }}
+              </div>
+              {% endif %}
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun planning défini.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

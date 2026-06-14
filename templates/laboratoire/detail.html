@@ -1,0 +1,42 @@
+{% extends "base/base.html" %}
+{% block title %}Résultats d'analyse{% endblock %}
+{% block page_title %}Résultats d'analyse{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🔬 Résultats d'analyse</h1><div class="breadcrumb">{{ demande.patient }} — {{ demande.date_demande|date:"d/m/Y" }}</div></div>
+  <a href="/laboratoire/" class="btn btn-outline">← Retour</a>
+</div>
+<div class="card mb-2">
+  <div class="card-body">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;">
+      <div><strong>Patient :</strong> {{ demande.patient.utilisateur.get_full_name }}</div>
+      <div><strong>Médecin :</strong> Dr. {{ demande.medecin_prescripteur.last_name }}</div>
+      <div><strong>Statut :</strong> <span class="badge badge-{{ demande.statut }}">{{ demande.get_statut_display }}</span></div>
+      <div><strong>Priorité :</strong> <span class="badge badge-{{ demande.priorite }}">{{ demande.get_priorite_display }}</span></div>
+      {% if demande.date_realisation %}<div><strong>Réalisée le :</strong> {{ demande.date_realisation|date:"d/m/Y H:i" }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% for r in demande.resultats.all %}
+<div class="card mb-2 {% if r.anormal %}{% endif %}" style="{% if r.anormal %}border-left:4px solid var(--danger);{% else %}border-left:4px solid var(--success);{% endif %}">
+  <div class="card-header">
+    <h5>{{ r.type_analyse.code }} — {{ r.type_analyse.nom }}</h5>
+    {% if r.anormal %}<span class="badge badge-annule">⚠️ Anormal</span>{% else %}<span class="badge badge-termine">✅ Normal</span>{% endif %}
+  </div>
+  <div class="card-body">
+    <div class="grid-2">
+      <div><div class="form-label">Résultat</div><p style="font-size:15px;font-weight:600;">{{ r.valeur }} {{ r.unite }}</p></div>
+      <div><div class="form-label">Interprétation</div><p>{{ r.interpretation|default:"—" }}</p></div>
+    </div>
+    {% if r.type_analyse.valeurs_normales %}
+    <div style="margin-top:10px;font-size:12px;color:var(--text-muted);">Valeurs de référence : {{ r.type_analyse.valeurs_normales }}</div>
+    {% endif %}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Saisi par {{ r.laborantin.get_full_name|default:"—" }} le {{ r.date|date:"d/m/Y H:i" }}</div>
+  </div>
+</div>
+{% empty %}
+<div class="card"><div class="card-body"><p class="text-muted">Résultats pas encore saisis.</p>
+  {% if user.role in 'laborantin,chef' %}<a href="/laboratoire/{{ demande.pk }}/resultats/" class="btn btn-primary mt-1">Saisir les résultats</a>{% endif %}
+</div></div>
+{% endfor %}
+{% endblock %}

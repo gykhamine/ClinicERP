@@ -1,0 +1,41 @@
+{% extends "base/base.html" %}
+{% block title %}Personnel{% endblock %}
+{% block page_title %}Ressources Humaines{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>👥 Personnel</h1><div class="breadcrumb">{{ fiches|length }} membres du personnel</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/rh/fiche/nouvelle/" class="btn btn-primary">+ Nouvelle fiche</a>
+    <a href="/rh/conge/gerer/" class="btn btn-outline">📋 Congés</a>
+    <a href="/rh/planning/" class="btn btn-outline">📅 Planning</a>
+  </div>
+</div>
+<div class="card">
+  <table class="table-clinic">
+    <thead><tr><th>Personnel</th><th>Matricule</th><th>Rôle</th><th>Département</th><th>Poste</th><th>Contrat</th><th>Salaire</th></tr></thead>
+    <tbody>
+      {% for f in fiches %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar" style="font-size:16px;">{{ f.utilisateur.get_role_display_icon }}</div>
+            <div>
+              <div style="font-weight:600;">{{ f.utilisateur.get_full_name }}</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ f.utilisateur.email }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span style="font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">{{ f.matricule }}</span></td>
+        <td>{{ f.utilisateur.get_role_display }}</td>
+        <td>{{ f.departement }}</td>
+        <td>{{ f.poste }}</td>
+        <td><span class="badge badge-normale">{{ f.get_type_contrat_display }}</span></td>
+        <td style="font-weight:600;">{{ f.salaire_base|floatformat:0 }} FCFA</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucune fiche personnel.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

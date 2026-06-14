@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}ClinicERP{% endblock %} — Gykhamine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🏥</div>
+    <div><div class="logo-text">ClinicERP</div><div class="logo-sub">by Gykhamine</div></div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section">Principal</div>
+    <a href="/dashboard/" class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <span class="icon">📊</span> Tableau de bord
+    </a>
+    {% if user.role != 'patient' %}
+    <div class="sidebar-section">Clinique</div>
+    <a href="/patients/" class="sidebar-item {% if '/patients/' in request.path %}active{% endif %}">
+      <span class="icon">👤</span> Patients
+    </a>
+    <a href="/consultations/rdv/" class="sidebar-item {% if '/consultations/rdv' in request.path %}active{% endif %}">
+      <span class="icon">📅</span> Rendez-vous
+    </a>
+    <a href="/consultations/liste/" class="sidebar-item {% if '/consultations/liste' in request.path %}active{% endif %}">
+      <span class="icon">🩺</span> Consultations
+    </a>
+    <a href="/laboratoire/" class="sidebar-item {% if '/laboratoire' in request.path %}active{% endif %}">
+      <span class="icon">🔬</span> Laboratoire
+    </a>
+    <a href="/pharmacie/" class="sidebar-item {% if '/pharmacie' in request.path %}active{% endif %}">
+      <span class="icon">💊</span> Pharmacie
+    </a>
+    <div class="sidebar-section">Hôpital</div>
+    <a href="/urgences/" class="sidebar-item {% if '/urgences' in request.path %}active{% endif %}">
+      <span class="icon">🚨</span> Urgences
+    </a>
+    <a href="/hospitalisation/carte/" class="sidebar-item {% if '/hospitalisation' in request.path %}active{% endif %}">
+      <span class="icon">🛏️</span> Hospitalisations
+    </a>
+    <a href="/bloc/" class="sidebar-item {% if '/bloc' in request.path %}active{% endif %}">
+      <span class="icon">🏥</span> Bloc opératoire
+    </a>
+    <div class="sidebar-section">Administration</div>
+    <a href="/facturation/" class="sidebar-item {% if '/facturation' in request.path %}active{% endif %}">
+      <span class="icon">💰</span> Facturation
+    </a>
+    {% if user.role == 'chef' %}
+    <a href="/rh/" class="sidebar-item {% if '/rh' in request.path %}active{% endif %}">
+      <span class="icon">👥</span> Ressources Humaines
+    </a>
+    <a href="/utilisateurs/" class="sidebar-item {% if '/utilisateurs' in request.path %}active{% endif %}">
+      <span class="icon">🔑</span> Utilisateurs
+    </a>
+    <a href="/rapports/" class="sidebar-item {% if '/rapports' in request.path %}active{% endif %}">
+      <span class="icon">📈</span> Rapports & Stats
+    </a>
+    {% endif %}
+    {% if user.role == 'pharmacien' or user.role == 'chef' %}
+    <a href="/pharmacie/historique/" class="sidebar-item">
+      <span class="icon">📦</span> Mouv. Stock
+    </a>
+    {% endif %}
+    {% else %}
+    <div class="sidebar-section">Mon espace</div>
+    <a href="/consultations/liste/" class="sidebar-item"><span class="icon">🩺</span> Mes consultations</a>
+    <a href="/facturation/" class="sidebar-item"><span class="icon">💰</span> Mes factures</a>
+    {% endif %}
+    <div class="sidebar-section">Compte</div>
+    <a href="/notifications/" class="sidebar-item {% if '/notifications' in request.path %}active{% endif %}">
+      <span class="icon">🔔</span> Notifications
+      <span class="sidebar-badge" id="notif-badge" style="display:none">0</span>
+    </a>
+    <a href="/profil/" class="sidebar-item"><span class="icon">⚙️</span> Mon profil</a>
+  </div>
+  <div class="sidebar-footer">
+    <div style="color:rgba(255,255,255,0.8);font-weight:600;font-size:13px;">{{ user.get_full_name }}</div>
+    <div style="margin-top:2px;">{{ user.get_role_display }}</div>
+    <a href="/logout/" style="display:inline-block;margin-top:10px;color:rgba(255,255,255,0.4);font-size:12px;text-decoration:none;">→ Déconnexion</a>
+  </div>
+</nav>
+
+<header class="topbar">
+  <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+  <div class="topbar-right">
+    <a href="/notifications/" style="text-decoration:none;font-size:22px;position:relative;">
+      🔔<span id="notif-dot" style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--danger);border-radius:50%;display:none;"></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--primary-light);border-radius:20px;padding:6px 14px;">
+      <span style="font-size:20px;">{{ user.get_role_display_icon }}</span>
+      <div>
+        <div style="font-size:13px;font-weight:600;">{{ user.get_full_name }}</div>
+        <div style="font-size:11px;color:var(--text-muted);">{{ user.get_role_display }}</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="main-content">
+{% if messages %}{% for msg in messages %}
+<div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}">
+  {% if 'success' in msg.tags %}✅{% elif 'error' in msg.tags %}❌{% elif 'warning' in msg.tags %}⚠️{% else %}ℹ️{% endif %} {{ msg }}
+</div>
+{% endfor %}{% endif %}
+{% block content %}{% endblock %}
+</div>
+
+<script>
+async function checkNotifs() {
+  try {
+    const r = await fetch('/notifications/count/');
+    const d = await r.json();
+    const badge = document.getElementById('notif-badge');
+    const dot = document.getElementById('notif-dot');
+    if (d.count > 0) {
+      if (badge) { badge.style.display='inline'; badge.textContent=d.count; }
+      if (dot) dot.style.display='block';
+    }
+  } catch(e) {}
+}
+checkNotifs();
+setInterval(checkNotifs, 30000);
+
+function showToast(titre, msg, type) {
+  const c = {urgence:'#E53935',alerte:'#F57C00',info:'#2E7D32',rappel:'#1565C0'}[type]||'#0F6B8A';
+  const t = document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:white;border-left:4px solid ${c};padding:16px 20px;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:9999;max-width:320px;font-size:13.5px;`;
+  t.innerHTML=`<div style="font-weight:700;margin-bottom:4px;color:${c}">${titre}</div><div style="color:#555">${msg}</div>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5000);
+}
+
+try {
+  const ws = new WebSocket(`ws://${window.location.host}/ws/notifications/`);
+  ws.onmessage = e => { const d=JSON.parse(e.data); showToast(d.titre,d.message,d.type_notif); checkNotifs(); };
+} catch(e) {}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

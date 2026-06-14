@@ -1,0 +1,145 @@
+{% extends "base/base.html" %}
+{% block title %}Rapports & Statistiques{% endblock %}
+{% block page_title %}Rapports & Statistiques{% endblock %}
+{% block extra_css %}
+<style>
+.chart-box { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+.chart-box h5 { font-size:14px; font-weight:600; margin-bottom:16px; color:var(--text); }
+canvas { max-height:260px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📈 Rapports & Statistiques</h1><div class="breadcrumb">30 derniers jours</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/rapports/financier/" class="btn btn-outline">💰 Financier</a>
+    <a href="/rapports/activite/" class="btn btn-outline">🩺 Activité</a>
+    <a href="/rapports/pdf/activite/" class="btn btn-primary">⬇ PDF Activité</a>
+    <a href="/rapports/pdf/financier/" class="btn btn-primary">⬇ PDF Financier</a>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-stats mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">👤</div>
+    <div><div class="stat-value">{{ stats.nb_patients }}</div><div class="stat-label">Patients total</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-accent-soft">🩺</div>
+    <div><div class="stat-value">{{ stats.nb_consultations_mois }}</div><div class="stat-label">Consultations (30j)</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-success-soft">💰</div>
+    <div><div class="stat-value" style="font-size:18px;">{{ stats.recettes_mois|floatformat:0 }}</div><div class="stat-label">FCFA encaissés (30j)</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-warning-soft">⏳</div>
+    <div><div class="stat-value">{{ stats.nb_factures_impayees }}</div><div class="stat-label">Factures impayées</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-danger-soft">⚠️</div>
+    <div><div class="stat-value">{{ stats.nb_medicaments_alerte }}</div><div class="stat-label">Alertes stock pharma</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">📅</div>
+    <div><div class="stat-value">{{ stats.rdv_aujourd_hui }}</div><div class="stat-label">RDV aujourd'hui</div></div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="grid-2 mb-3">
+  <div class="chart-box">
+    <h5>🩺 Consultations par jour (30 jours)</h5>
+    <canvas id="chartCons"></canvas>
+  </div>
+  <div class="chart-box">
+    <h5>💰 Recettes par jour (30 jours)</h5>
+    <canvas id="chartRecettes"></canvas>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="chart-box">
+    <h5>👥 Répartition des utilisateurs</h5>
+    <canvas id="chartRoles"></canvas>
+  </div>
+  <div class="chart-box">
+    <h5>🏆 Top médecins (consultations)</h5>
+    <canvas id="chartMedecins"></canvas>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const consData = {{ cons_data|safe }};
+const paieData = {{ paie_data|safe }};
+const rolesData = {{ roles_count|safe }};
+const medecinData = {{ top_medecins|safe }};
+
+const palette = ['#0F6B8A','#00BFA5','#F57C00','#E53935','#7b1fa2','#1565c0','#2e7d32','#ad1457'];
+
+// Chart consultations
+const sortedDays = Object.keys(consData).sort();
+new Chart(document.getElementById('chartCons'), {
+  type: 'bar',
+  data: {
+    labels: sortedDays.map(d => d.slice(5)),
+    datasets: [{
+      label: 'Consultations',
+      data: sortedDays.map(d => consData[d] || 0),
+      backgroundColor: '#0F6B8A',
+      borderRadius: 6,
+    }]
+  },
+  options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1}}} }
+});
+
+// Chart recettes
+const sortedPaie = Object.keys(paieData).sort();
+new Chart(document.getElementById('chartRecettes'), {
+  type: 'line',
+  data: {
+    labels: sortedPaie.map(d => d.slice(5)),
+    datasets: [{
+      label: 'FCFA',
+      data: sortedPaie.map(d => paieData[d] || 0),
+      borderColor: '#00BFA5',
+      backgroundColor: 'rgba(0,191,165,0.1)',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#00BFA5',
+    }]
+  },
+  options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+});
+
+// Chart roles (donut)
+const rolesLabels = Object.keys(rolesData);
+new Chart(document.getElementById('chartRoles'), {
+  type: 'doughnut',
+  data: {
+    labels: rolesLabels,
+    datasets: [{ data: rolesLabels.map(k => rolesData[k]), backgroundColor: palette, borderWidth: 2 }]
+  },
+  options: { responsive:true, plugins:{legend:{position:'right'}} }
+});
+
+// Chart médecins
+new Chart(document.getElementById('chartMedecins'), {
+  type: 'bar',
+  data: {
+    labels: medecinData.map(m => m.nom),
+    datasets: [{
+      label: 'Consultations',
+      data: medecinData.map(m => m.nb),
+      backgroundColor: palette,
+      borderRadius: 6,
+    }]
+  },
+  options: { responsive:true, indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1}}} }
+});
+</script>
+{% endblock %}

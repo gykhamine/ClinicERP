@@ -1,0 +1,65 @@
+{% extends "base/base.html" %}
+{% block title %}Laboratoire{% endblock %}
+{% block page_title %}Laboratoire{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🔬 Laboratoire</h1><div class="breadcrumb">Analyses biologiques</div></div>
+  {% if user.role in 'medecin,chef' %}<a href="/laboratoire/prescrire/" class="btn btn-primary">+ Prescrire analyse</a>{% endif %}
+</div>
+
+<div class="card mb-3">
+  <div class="card-body" style="padding:14px 20px;">
+    <form method="get" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div>
+        <label class="form-label">Statut</label>
+        <select name="statut" class="form-select" style="width:160px;">
+          <option value="">Tous</option>
+          <option value="demande" {% if statut_filtre == 'demande' %}selected{% endif %}>Demandée</option>
+          <option value="en_cours" {% if statut_filtre == 'en_cours' %}selected{% endif %}>En cours</option>
+          <option value="termine" {% if statut_filtre == 'termine' %}selected{% endif %}>Terminée</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Priorité</label>
+        <select name="priorite" class="form-select" style="width:160px;">
+          <option value="">Toutes</option>
+          <option value="urgente">Urgente</option>
+          <option value="normale">Normale</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Filtrer</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <table class="table-clinic">
+    <thead><tr><th>Date</th><th>Patient</th><th>Analyses</th><th>Prescrit par</th><th>Priorité</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for a in analyses %}
+      <tr {% if a.priorite == 'urgente' %}style="background:#fff5f5;"{% endif %}>
+        <td style="white-space:nowrap;font-size:12px;">{{ a.date_demande|date:"d/m/Y H:i" }}</td>
+        <td>
+          <div style="font-weight:600;">{{ a.patient.utilisateur.get_full_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ a.patient.numero_dossier }}</div>
+        </td>
+        <td>{% for t in a.types_analyses.all %}<span style="background:var(--primary-light);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:3px;">{{ t.code }}</span>{% endfor %}</td>
+        <td>Dr. {{ a.medecin_prescripteur.last_name }}</td>
+        <td><span class="badge badge-{{ a.priorite }}">{{ a.get_priorite_display }}</span></td>
+        <td><span class="badge badge-{{ a.statut }}">{{ a.get_statut_display }}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/laboratoire/{{ a.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+            {% if user.role in 'laborantin,chef' and a.statut != 'termine' %}
+            <a href="/laboratoire/{{ a.pk }}/resultats/" class="btn btn-primary btn-sm">Saisir</a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Aucune analyse.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

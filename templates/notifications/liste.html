@@ -1,0 +1,38 @@
+{% extends "base/base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🔔 Notifications</h1><div class="breadcrumb">{{ notifications|length }} notification(s)</div></div>
+</div>
+<div class="card">
+  {% for n in notifications %}
+  <div style="display:flex;gap:16px;padding:16px 20px;border-bottom:1px solid var(--border);{% if not n.lue %}background:#f8fbff;{% endif %}align-items:flex-start;">
+    <div style="font-size:24px;flex-shrink:0;margin-top:2px;">
+      {% if n.type_notif == 'urgence' %}🚨{% elif n.type_notif == 'alerte' %}⚠️{% elif n.type_notif == 'rappel' %}📌{% else %}ℹ️{% endif %}
+    </div>
+    <div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <span style="font-weight:{% if not n.lue %}700{% else %}500{% endif %};font-size:14px;">{{ n.titre }}</span>
+        {% if not n.lue %}<span style="width:8px;height:8px;background:var(--primary);border-radius:50%;display:inline-block;"></span>{% endif %}
+        <span class="badge badge-{{ n.type_notif }}" style="margin-left:auto;">{{ n.get_type_notif_display }}</span>
+      </div>
+      <div style="font-size:13px;color:{% if not n.lue %}var(--text){% else %}var(--text-muted){% endif %};">{{ n.message }}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+        {{ n.date|date:"d/m/Y à H:i" }}
+        {% if n.expediteur %} — De : {{ n.expediteur.get_full_name }}{% endif %}
+      </div>
+    </div>
+    {% if n.lien %}
+    <a href="{{ n.lien }}" class="btn btn-outline btn-sm" style="flex-shrink:0;">Voir →</a>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div style="text-align:center;padding:48px;color:var(--text-muted);">
+    <div style="font-size:48px;margin-bottom:12px;">🔔</div>
+    <div style="font-weight:600;margin-bottom:6px;">Aucune notification</div>
+    <div style="font-size:13px;">Vous êtes à jour !</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

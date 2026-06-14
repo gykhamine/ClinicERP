@@ -1,0 +1,135 @@
+{% extends "base/base.html" %}
+{% block title %}Urgences{% endblock %}
+{% block page_title %}Tableau des urgences{% endblock %}
+{% block extra_css %}
+<style>
+.triage-card { border-radius:var(--radius); padding:16px; color:white; display:flex; flex-direction:column; gap:4px; }
+.passage-row { border-radius:8px; padding:14px 16px; margin-bottom:8px; border-left:5px solid; display:flex; align-items:center; gap:16px; background:white; box-shadow:var(--shadow); }
+.chrono { font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; }
+.pulse { animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🚨 Urgences</h1><div class="breadcrumb">{{ total_actifs }} patient(s) en cours — Mise à jour automatique</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/urgences/arrivee/" class="btn btn-danger">+ Nouvelle arrivée</a>
+    <a href="/urgences/historique/" class="btn btn-outline">📋 Historique</a>
+  </div>
+</div>
+
+<!-- Stats triage -->
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+  <div class="triage-card" style="background:#c62828;flex:1;min-width:120px;">
+    <div style="font-size:28px;font-weight:700;">{{ stats_triage.1 }}</div>
+    <div style="font-size:12px;opacity:0.9;">P1 — Immédiat</div>
+  </div>
+  <div class="triage-card" style="background:#e65100;flex:1;min-width:120px;">
+    <div style="font-size:28px;font-weight:700;">{{ stats_triage.2 }}</div>
+    <div style="font-size:12px;opacity:0.9;">P2 — Très urgent</div>
+  </div>
+  <div class="triage-card" style="background:#f9a825;flex:1;min-width:120px;">
+    <div style="font-size:28px;font-weight:700;">{{ stats_triage.3 }}</div>
+    <div style="font-size:12px;opacity:0.9;">P3 — Urgent</div>
+  </div>
+  <div class="triage-card" style="background:#2e7d32;flex:1;min-width:120px;">
+    <div style="font-size:28px;font-weight:700;">{{ stats_triage.4 }}</div>
+    <div style="font-size:12px;opacity:0.9;">P4 — Peu urgent</div>
+  </div>
+  <div class="triage-card" style="background:#546e7a;flex:1;min-width:120px;">
+    <div style="font-size:28px;font-weight:700;">{{ stats_triage.5 }}</div>
+    <div style="font-size:12px;opacity:0.9;">P5 — Non urgent</div>
+  </div>
+  <div class="triage-card" style="background:var(--primary);flex:1;min-width:120px;">
+    <div style="font-size:28px;font-weight:700;">{{ en_attente }}</div>
+    <div style="font-size:12px;opacity:0.9;">En attente triage</div>
+  </div>
+</div>
+
+<!-- Liste patients actifs -->
+<div>
+  {% if passages %}
+  {% for p in passages %}
+  <div class="passage-row" style="border-left-color:{{ p.get_triage_color }};">
+    <!-- Priorité -->
+    <div style="text-align:center;min-width:52px;">
+      {% if p.niveau_triage %}
+      <div style="width:44px;height:44px;border-radius:50%;background:{{ p.get_triage_color }};color:white;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;{% if p.niveau_triage == 1 %}box-shadow:0 0 0 3px rgba(198,40,40,0.3);{% endif %}" class="{% if p.niveau_triage == 1 %}pulse{% endif %}">
+        P{{ p.niveau_triage }}
+      </div>
+      {% else %}
+      <div style="width:44px;height:44px;border-radius:50%;background:#e0e0e0;color:#9e9e9e;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">?</div>
+      {% endif %}
+    </div>
+    <!-- Patient -->
+    <div style="flex:1;min-width:150px;">
+      <div style="font-weight:700;font-size:15px;">{{ p.patient.utilisateur.get_full_name }}</div>
+      <div style="font-size:12px;color:var(--text-muted);">{{ p.patient.numero_dossier }}</div>
+    </div>
+    <!-- Motif -->
+    <div style="flex:2;min-width:180px;">
+      <div style="font-size:13px;color:var(--text);">{{ p.motif_venue|truncatechars:60 }}</div>
+      {% if p.symptomes %}<div style="font-size:11px;color:var(--text-muted);">{{ p.symptomes|truncatechars:50 }}</div>{% endif %}
+    </div>
+    <!-- Constantes -->
+    <div style="min-width:160px;display:flex;gap:6px;flex-wrap:wrap;">
+      {% if p.tension %}<span style="background:var(--primary-light);color:var(--primary);padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">❤️ {{ p.tension }}</span>{% endif %}
+      {% if p.temperature %}<span style="background:#fff3e0;color:var(--warning);padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">🌡️ {{ p.temperature }}°</span>{% endif %}
+      {% if p.saturation_o2 %}<span style="background:#e0f7f4;color:var(--accent-dark);padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">O₂ {{ p.saturation_o2 }}%</span>{% endif %}
+      {% if p.glasgow %}<span style="background:#f3e5f5;color:#7b1fa2;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">GCS {{ p.glasgow }}</span>{% endif %}
+    </div>
+    <!-- Temps -->
+    <div style="text-align:center;min-width:80px;">
+      <div class="chrono" style="color:{% if p.duree_totale_minutes > 120 %}var(--danger){% elif p.duree_totale_minutes > 60 %}var(--warning){% else %}var(--success){% endif %}">
+        {% with d=p.duree_totale_minutes %}
+        {% if d >= 60 %}{{ d|divisibleby:60 }}h{{ d|add:"-0"|floatformat:0 }}{% else %}{{ d }}min{% endif %}
+        {% endwith %}
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);">{{ p.date_arrivee|time:"H:i" }}</div>
+    </div>
+    <!-- Statut & Actions -->
+    <div style="text-align:right;min-width:180px;">
+      <div><span class="badge badge-{{ p.statut }}" style="margin-bottom:8px;">{{ p.get_statut_display }}</span></div>
+      <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+        {% if p.statut == 'attente_triage' %}
+        <a href="/urgences/{{ p.pk }}/triage/" class="btn btn-warning btn-sm">🏷️ Trier</a>
+        {% elif p.statut == 'triage_fait' %}
+        <a href="/urgences/{{ p.pk }}/prise-en-charge/" class="btn btn-primary btn-sm">🩺 Prendre en charge</a>
+        {% endif %}
+        <a href="/urgences/{{ p.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+        {% if p.statut in 'en_cours,observation' %}
+        <a href="/urgences/{{ p.pk }}/sortie/" class="btn btn-success btn-sm">🚪</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div style="text-align:center;padding:60px;background:white;border-radius:var(--radius);box-shadow:var(--shadow);">
+    <div style="font-size:56px;margin-bottom:16px;">✅</div>
+    <div style="font-size:18px;font-weight:700;color:var(--success);">Aucun patient en attente</div>
+    <div style="color:var(--text-muted);margin-top:8px;">Les urgences sont libres.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Auto-refresh toutes les 30 secondes
+setTimeout(() => location.reload(), 30000);
+
+// Chrono en temps réel
+function updateChronos() {
+  document.querySelectorAll('.chrono[data-arrival]').forEach(el => {
+    const arrival = new Date(el.dataset.arrival);
+    const now = new Date();
+    const mins = Math.floor((now - arrival) / 60000);
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    el.textContent = h > 0 ? `${h}h${m.toString().padStart(2,'0')}` : `${m}min`;
+  });
+}
+setInterval(updateChronos, 30000);
+</script>
+{% endblock %}

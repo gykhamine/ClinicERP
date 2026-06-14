@@ -1,0 +1,96 @@
+{% extends "base/base.html" %}
+{% block title %}Facture {{ facture.numero }}{% endblock %}
+{% block page_title %}Facture{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>💰 Facture {{ facture.numero }}</h1><div class="breadcrumb">{{ facture.patient }} — {{ facture.date_emission|date:"d/m/Y" }}</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/facturation/" class="btn btn-outline">← Retour</a>
+    {% if facture.statut == 'brouillon' %}
+    <form method="post" action="/facturation/{{ facture.pk }}/emettre/">{% csrf_token %}<button type="submit" class="btn btn-primary">📤 Émettre</button></form>
+    {% elif facture.statut in 'emise,partiel' %}
+    <a href="/facturation/{{ facture.pk }}/paiement/" class="btn btn-success">💳 Enregistrer paiement</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+  <div>
+    <div class="card mb-2" style="border-top:4px solid var(--primary);">
+      <div class="card-body" style="padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+          <div>
+            <div style="font-size:22px;font-weight:700;color:var(--primary);">🏥 ClinicERP</div>
+            <div style="font-size:12px;color:var(--text-muted);">Brazzaville, République du Congo</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:20px;font-weight:700;">Facture</div>
+            <div style="font-family:monospace;font-size:14px;color:var(--primary);">{{ facture.numero }}</div>
+            <span class="badge badge-{{ facture.statut }}" style="margin-top:6px;">{{ facture.get_statut_display }}</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:24px;margin-bottom:24px;">
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Patient</div>
+            <div style="font-weight:600;">{{ facture.patient.utilisateur.get_full_name }}</div>
+            <div style="font-size:12px;color:var(--text-muted);">{{ facture.patient.numero_dossier }}</div>
+            <div style="font-size:12px;">{{ facture.patient.utilisateur.telephone }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Date</div>
+            <div>{{ facture.date_emission|date:"d/m/Y" }}</div>
+          </div>
+        </div>
+
+        <table class="table-clinic" style="margin-bottom:20px;">
+          <thead><tr><th>Description</th><th style="text-align:right;">Qté</th><th style="text-align:right;">P.U (FCFA)</th><th style="text-align:right;">Total</th></tr></thead>
+          <tbody>
+            {% for ligne in facture.lignes.all %}
+            <tr>
+              <td>{{ ligne.description }}</td>
+              <td style="text-align:right;">{{ ligne.quantite }}</td>
+              <td style="text-align:right;">{{ ligne.prix_unitaire|floatformat:0 }}</td>
+              <td style="text-align:right;font-weight:600;">{{ ligne.total|floatformat:0 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div style="border-top:2px solid var(--border);padding-top:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Sous-total</span><span style="font-weight:600;">{{ facture.sous_total|floatformat:0 }} FCFA</span></div>
+          {% if facture.remise_pourcent > 0 %}
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;color:var(--danger);"><span>Remise ({{ facture.remise_pourcent }}%)</span><span>-{{ facture.montant_remise|floatformat:0 }} FCFA</span></div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:700;color:var(--primary);border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
+            <span>TOTAL</span><span>{{ facture.total|floatformat:0 }} FCFA</span>
+          </div>
+        </div>
+        {% if facture.notes %}<div style="margin-top:16px;font-size:12px;color:var(--text-muted);font-style:italic;">Notes : {{ facture.notes }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card mb-2">
+      <div class="card-header"><h5>💳 Historique des paiements</h5></div>
+      <div class="card-body">
+        {% for p in facture.paiements.all %}
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div><div style="font-weight:600;">{{ p.montant|floatformat:0 }} FCFA</div><div style="font-size:12px;color:var(--text-muted);">{{ p.mode }} • {{ p.date|date:"d/m/Y H:i" }}</div></div>
+          {% if p.reference %}<div style="font-size:12px;color:var(--text-muted);">Réf: {{ p.reference }}</div>{% endif %}
+        </div>
+        {% empty %}<p class="text-muted">Aucun paiement enregistré.</p>{% endfor %}
+      </div>
+    </div>
+    {% if facture.caissier %}
+    <div class="card">
+      <div class="card-body" style="font-size:13px;">
+        <div class="text-muted">Créée par : <strong>{{ facture.caissier.get_full_name }}</strong></div>
+        {% if facture.mode_paiement %}<div class="mt-1 text-muted">Mode paiement : <strong>{{ facture.get_mode_paiement_display }}</strong></div>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

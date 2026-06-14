@@ -1,0 +1,62 @@
+{% extends "base/base.html" %}
+{% block title %}Nouvelle facture{% endblock %}
+{% block page_title %}Nouvelle facture{% endblock %}
+{% block extra_css %}<style>.ligne-fact{background:#f7fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;}.ligne-fact .remove-btn{position:absolute;top:8px;right:8px;background:var(--danger);color:white;border:none;border-radius:5px;width:24px;height:24px;cursor:pointer;}</style>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💰 Nouvelle facture</h1></div><a href="/facturation/" class="btn btn-outline">← Retour</a></div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div>
+      <div class="card mb-2">
+        <div class="card-header"><h5>Patient & Options</h5></div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label">Patient *</label><select name="patient" class="form-select" required><option value="">— Sélectionner —</option>{% for p in patients %}<option value="{{ p.pk }}">{{ p.utilisateur.get_full_name }} ({{ p.numero_dossier }})</option>{% endfor %}</select></div>
+          <div class="grid-2" style="gap:14px;">
+            <div><label class="form-label">Remise (%)</label><input type="number" name="remise_pourcent" class="form-control" value="0" min="0" max="100" step="0.5"></div>
+          </div>
+          <div class="mt-2"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5>Services rapides</h5></div>
+        <div class="card-body">
+          {% for s in services %}
+          <div onclick="ajouterService('{{ s.nom }}','{{ s.prix }}')" style="padding:8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;" onmouseenter="this.style.background='var(--primary-light)'" onmouseleave="this.style.background='white'">
+            <span>{{ s.nom }}</span><span style="font-weight:600;color:var(--primary);">{{ s.prix|floatformat:0 }} FCFA</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>Lignes de facturation</h5><button type="button" onclick="ajouterLigne()" class="btn btn-accent btn-sm">+ Ligne</button></div>
+      <div class="card-body" id="lignes-container">
+        <div class="ligne-fact">
+          <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+          <div class="grid-2" style="gap:10px;">
+            <div><label class="form-label">Description *</label><input type="text" name="description[]" class="form-control" required placeholder="Consultation, médicament..."></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div><label class="form-label">Qté</label><input type="number" name="quantite[]" class="form-control" value="1" step="0.01"></div>
+              <div><label class="form-label">Prix unitaire</label><input type="number" name="prix_unitaire[]" class="form-control" placeholder="FCFA" step="0.01"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);">
+        <button type="submit" class="btn btn-primary w-100 btn-lg">💰 Créer la facture</button>
+      </div>
+    </div>
+  </div>
+</form>
+<script>
+function ajouterLigne(desc='', prix='') {
+  const c = document.getElementById('lignes-container');
+  const d = document.createElement('div');
+  d.className = 'ligne-fact';
+  d.innerHTML = `<button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button><div class="grid-2" style="gap:10px;"><div><label class="form-label">Description *</label><input type="text" name="description[]" class="form-control" required value="${desc}" placeholder="Consultation, médicament..."></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div><label class="form-label">Qté</label><input type="number" name="quantite[]" class="form-control" value="1" step="0.01"></div><div><label class="form-label">Prix unitaire</label><input type="number" name="prix_unitaire[]" class="form-control" value="${prix}" placeholder="FCFA" step="0.01"></div></div></div>`;
+  c.appendChild(d);
+}
+function ajouterService(nom, prix) { ajouterLigne(nom, prix); }
+</script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base/base.html" %}
+{% block title %}Carte des lits{% endblock %}
+{% block page_title %}Hospitalisation — Carte des lits{% endblock %}
+{% block extra_css %}
+<style>
+.lit-card { width:52px; height:52px; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:11px; font-weight:700; cursor:pointer; border:2px solid transparent; transition:transform .15s, box-shadow .15s; }
+.lit-card:hover { transform:scale(1.08); box-shadow:0 4px 16px rgba(0,0,0,.15); }
+.lit-libre { background:#e8f5e9; color:#2e7d32; border-color:#a5d6a7; }
+.lit-occupe { background:#ffebee; color:#c62828; border-color:#ef9a9a; }
+.lit-nettoyage { background:#fff3e0; color:#e65100; border-color:#ffcc80; }
+.lit-hors_service { background:#f5f5f5; color:#9e9e9e; border-color:#e0e0e0; }
+.service-card { background:white; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--border); margin-bottom:20px; overflow:hidden; }
+.service-header { padding:14px 20px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:space-between; }
+.service-lits { padding:20px; display:flex; flex-wrap:wrap; gap:12px; }
+.chambre-group { background:#f7fafc; border-radius:8px; padding:12px; border:1px solid var(--border); }
+.chambre-label { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px; }
+.lits-row { display:flex; gap:6px; flex-wrap:wrap; }
+.occupation-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:6px; }
+.occupation-fill { height:100%; border-radius:3px; background:var(--primary); transition:width .3s; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🛏️ Carte des lits</h1><div class="breadcrumb">Occupation en temps réel</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/hospitalisation/admettre/" class="btn btn-primary">+ Admettre patient</a>
+    <a href="/hospitalisation/" class="btn btn-outline">📋 Liste hospitalisations</a>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="grid-stats mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">🛏️</div>
+    <div><div class="stat-value">{{ total_lits }}</div><div class="stat-label">Lits au total</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-success-soft">✅</div>
+    <div><div class="stat-value" style="color:var(--success);">{{ lits_libres }}</div><div class="stat-label">Lits libres</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-danger-soft">🔴</div>
+    <div><div class="stat-value" style="color:var(--danger);">{{ lits_occupes }}</div><div class="stat-label">Lits occupés</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {% if taux_occupation > 80 %}bg-danger-soft{% elif taux_occupation > 60 %}bg-warning-soft{% else %}bg-accent-soft{% endif %}">📊</div>
+    <div>
+      <div class="stat-value" style="{% if taux_occupation > 80 %}color:var(--danger);{% elif taux_occupation > 60 %}color:var(--warning);{% else %}color:var(--success);{% endif %}">{{ taux_occupation }}%</div>
+      <div class="stat-label">Taux d'occupation</div>
+    </div>
+  </div>
+</div>
+
+<!-- Légende -->
+<div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;background:white;padding:12px 20px;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);">
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:16px;height:16px;border-radius:4px;background:#e8f5e9;border:2px solid #a5d6a7;"></div>Libre</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:16px;height:16px;border-radius:4px;background:#ffebee;border:2px solid #ef9a9a;"></div>Occupé</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:16px;height:16px;border-radius:4px;background:#fff3e0;border:2px solid #ffcc80;"></div>Nettoyage</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;"><div style="width:16px;height:16px;border-radius:4px;background:#f5f5f5;border:2px solid #e0e0e0;"></div>Hors service</div>
+</div>
+
+<!-- Services -->
+{% for service in services %}
+<div class="service-card">
+  <div class="service-header">
+    <div>
+      <span style="font-weight:700;font-size:15px;">{{ service.nom }}</span>
+      <span style="background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;">{{ service.code }}</span>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:13px;">{{ service.lits_disponibles }} libre(s) / {{ service.lits.count }} lits</div>
+      <div class="occupation-bar" style="width:140px;margin-left:auto;margin-top:4px;">
+        <div class="occupation-fill" style="width:{{ service.taux_occupation }}%;{% if service.taux_occupation > 80 %}background:#E53935;{% elif service.taux_occupation > 60 %}background:#F57C00;{% endif %}"></div>
+      </div>
+    </div>
+  </div>
+  <div class="service-lits">
+    {% for chambre in service.chambres.all %}
+    {% if chambre.actif %}
+    <div class="chambre-group">
+      <div class="chambre-label">Ch. {{ chambre.numero }} — {{ chambre.get_type_chambre_display }}</div>
+      <div class="lits-row">
+        {% for lit in chambre.lits.all %}
+        <div class="lit-card lit-{{ lit.statut }}" title="Lit {{ lit.numero }} — {{ lit.get_statut_display }}{% if lit.statut == 'occupe' %}
+Cliquer pour voir patient{% endif %}"
+          {% if lit.statut == 'occupe' %}onclick="voirLit({{ lit.pk }})"{% endif %}>
+          <span style="font-size:16px;">{% if lit.statut == 'libre' %}🛏️{% elif lit.statut == 'occupe' %}🔴{% elif lit.statut == 'nettoyage' %}🧹{% else %}🚫{% endif %}</span>
+          <span>{{ lit.numero }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <p style="color:var(--text-muted);font-size:13px;">Aucune chambre configurée. <a href="/hospitalisation/structure/service/{{ service.pk }}/lits/">Ajouter des lits →</a></p>
+    {% endfor %}
+  </div>
+</div>
+{% empty %}
+<div class="card"><div class="card-body" style="text-align:center;padding:40px;">
+  <div style="font-size:40px;margin-bottom:12px;">🏗️</div>
+  <p class="text-muted">Aucun service configuré. <a href="/hospitalisation/structure/service/">Créer un service →</a></p>
+</div></div>
+{% endfor %}
+{% endblock %}
+{% block extra_js %}
+<script>
+function voirLit(litPk) {
+  // Simple redirect to find hosp for this lit
+  window.location.href = `/hospitalisation/?lit=${litPk}`;
+}
+// Auto-refresh toutes les 60 secondes
+setTimeout(() => location.reload(), 60000);
+</script>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "base/base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Bonjour, {{ user.first_name }} {{ user.get_role_display_icon }}</h1>
+    <div class="breadcrumb">{% now "l d F Y" %} — Clinique ClinicERP</div>
+  </div>
+</div>
+
+{% if user.role == 'patient' %}
+<!-- DASHBOARD PATIENT -->
+<div class="grid-stats mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">📅</div>
+    <div><div class="stat-value">{{ rendez_vous|length }}</div><div class="stat-label">Rendez-vous à venir</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-accent-soft">🩺</div>
+    <div><div class="stat-value">{{ consultations|length }}</div><div class="stat-label">Consultations</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-warning-soft">💰</div>
+    <div><div class="stat-value">{{ factures|length }}</div><div class="stat-label">Factures en attente</div></div>
+  </div>
+</div>
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h5>📅 Mes prochains rendez-vous</h5></div>
+    <div class="card-body">
+      {% for rdv in rendez_vous %}
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="background:var(--primary-light);border-radius:8px;padding:8px 12px;text-align:center;min-width:52px;">
+          <div style="font-size:16px;font-weight:700;color:var(--primary);">{{ rdv.date_heure|date:"d" }}</div>
+          <div style="font-size:10px;color:var(--text-muted);">{{ rdv.date_heure|date:"M" }}</div>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:14px;">Dr. {{ rdv.medecin.last_name }}</div>
+          <div style="font-size:12px;color:var(--text-muted);">{{ rdv.date_heure|time:"H:i" }} — {{ rdv.motif|truncatechars:40 }}</div>
+        </div>
+        <span class="badge badge-{{ rdv.statut }}" style="margin-left:auto;">{{ rdv.get_statut_display }}</span>
+      </div>
+      {% empty %}<p class="text-muted" style="padding:16px 0;">Aucun rendez-vous programmé.</p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>💰 Mes factures</h5></div>
+    <div class="card-body">
+      {% for f in factures %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;font-size:13px;">{{ f.numero }}</div>
+          <div style="font-size:12px;color:var(--text-muted);">{{ f.date_emission|date:"d/m/Y" }}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;">{{ f.total|floatformat:0 }} FCFA</div>
+          <span class="badge badge-{{ f.statut }}">{{ f.get_statut_display }}</span>
+        </div>
+      </div>
+      {% empty %}<p class="text-muted" style="padding:16px 0;">Aucune facture.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- DASHBOARD PERSONNEL -->
+<div class="grid-stats mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">👤</div>
+    <div><div class="stat-value">{{ nb_patients }}</div><div class="stat-label">Patients enregistrés</div></div>
+  </div>
+  {% if urgences_actives is not None %}
+  <div class="stat-card">
+    <div class="stat-icon bg-danger-soft">🚨</div>
+    <div><div class="stat-value" style="color:var(--danger);">{{ urgences_actives }}</div><div class="stat-label">Urgences actives</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-warning-soft">🛏️</div>
+    <div><div class="stat-value" style="color:var(--warning);">{{ lits_occupes }}</div><div class="stat-label">Lits occupés</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-success-soft">✅</div>
+    <div><div class="stat-value" style="color:var(--success);">{{ lits_libres }}</div><div class="stat-label">Lits libres</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">🏥</div>
+    <div><div class="stat-value">{{ ops_aujourd_hui }}</div><div class="stat-label">Opérations aujourd'hui</div></div>
+  </div>
+  {% endif %}
+  <div class="stat-card">
+    <div class="stat-icon bg-accent-soft">📅</div>
+    <div><div class="stat-value">{{ rdv_aujourd_hui }}</div><div class="stat-label">RDV aujourd'hui</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-success-soft">🩺</div>
+    <div><div class="stat-value">{{ consultations_du_jour }}</div><div class="stat-label">Consultations du jour</div></div>
+  </div>
+  {% if factures_impayees %}
+  <div class="stat-card">
+    <div class="stat-icon bg-warning-soft">💰</div>
+    <div><div class="stat-value">{{ factures_impayees|length }}</div><div class="stat-label">Factures impayées</div></div>
+  </div>
+  {% endif %}
+  {% if ruptures %}
+  <div class="stat-card">
+    <div class="stat-icon bg-danger-soft">⚠️</div>
+    <div><div class="stat-value">{{ ruptures|length }}</div><div class="stat-label">Alertes stock pharma</div></div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid-2">
+  {% if mes_rdv %}
+  <div class="card">
+    <div class="card-header">
+      <h5>📅 Mes rendez-vous aujourd'hui</h5>
+      <a href="/consultations/rdv/" class="btn btn-outline btn-sm">Voir tout</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table class="table-clinic">
+        <thead><tr><th>Patient</th><th>Heure</th><th>Motif</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          {% for rdv in mes_rdv %}
+          <tr>
+            <td><div class="avatar">{{ rdv.patient.utilisateur.first_name.0 }}{{ rdv.patient.utilisateur.last_name.0 }}</div> {{ rdv.patient.utilisateur.get_full_name }}</td>
+            <td style="font-weight:600;">{{ rdv.date_heure|time:"H:i" }}</td>
+            <td style="color:var(--text-muted);">{{ rdv.motif|truncatechars:30 }}</td>
+            <td><span class="badge badge-{{ rdv.statut }}">{{ rdv.get_statut_display }}</span></td>
+            <td><a href="/consultations/nouvelle/rdv/{{ rdv.pk }}/" class="btn btn-primary btn-sm">Consulter</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if ruptures %}
+  <div class="card">
+    <div class="card-header">
+      <h5>⚠️ Alertes stock pharmacie</h5>
+      <a href="/pharmacie/" class="btn btn-outline btn-sm">Pharmacie</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table class="table-clinic">
+        <thead><tr><th>Médicament</th><th>Stock</th><th>Min.</th><th></th></tr></thead>
+        <tbody>
+          {% for m in ruptures %}
+          <tr>
+            <td>{{ m.nom }} <span style="font-size:11px;color:var(--text-muted);">{{ m.dosage }}</span></td>
+            <td style="font-weight:700;color:var(--danger);">{{ m.stock }}</td>
+            <td style="color:var(--text-muted);">{{ m.stock_minimum }}</td>
+            <td><a href="/pharmacie/{{ m.pk }}/mouvement/" class="btn btn-warning btn-sm">Commander</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if factures_impayees %}
+  <div class="card">
+    <div class="card-header">
+      <h5>💰 Factures impayées</h5>
+      <a href="/facturation/" class="btn btn-outline btn-sm">Facturation</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table class="table-clinic">
+        <thead><tr><th>N°</th><th>Patient</th><th>Montant</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for f in factures_impayees %}
+          <tr>
+            <td><a href="/facturation/{{ f.pk }}/" style="color:var(--primary);font-weight:600;">{{ f.numero }}</a></td>
+            <td>{{ f.patient.utilisateur.get_full_name }}</td>
+            <td style="font-weight:700;">{{ f.total|floatformat:0 }} FCFA</td>
+            <td><span class="badge badge-{{ f.statut }}">{{ f.get_statut_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header"><h5>🔔 Notifications récentes</h5><a href="/notifications/" class="btn btn-outline btn-sm">Toutes</a></div>
+    <div class="card-body">
+      {% for n in notifications %}
+      <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:20px;">{% if n.type_notif == 'urgence' %}🚨{% elif n.type_notif == 'alerte' %}⚠️{% elif n.type_notif == 'rappel' %}📌{% else %}ℹ️{% endif %}</span>
+        <div>
+          <div style="font-weight:600;font-size:13px;">{{ n.titre }}</div>
+          <div style="font-size:12px;color:var(--text-muted);">{{ n.message|truncatechars:60 }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">{{ n.date|timesince }} ago</div>
+        </div>
+      </div>
+      {% empty %}<p class="text-muted">Aucune notification.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

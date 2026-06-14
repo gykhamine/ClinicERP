@@ -1,0 +1,103 @@
+{% extends "base/base.html" %}
+{% block title %}Mon profil{% endblock %}
+{% block page_title %}Mon profil{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1>⚙️ Mon profil</h1></div>
+</div>
+
+<div class="grid-2" style="align-items: start;">
+  <div class="card">
+    <div class="card-body" style="text-align: center; padding: 32px;">
+      <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: inline-flex; align-items: center; justify-content: center; font-size: 32px; color: white; font-weight: 700; margin-bottom: 16px;">
+        {{ u.first_name.0 }}{{ u.last_name.0 }}
+      </div>
+      
+      <div style="font-size: 20px; font-weight: 700;">{{ u.get_full_name }}</div>
+      <div style="color: var(--text-muted); margin-top: 4px;">
+        {{ u.get_role_display }} {{ u.get_role_display_icon }}
+      </div>
+      
+      <div style="margin-top: 12px; display: inline-block; background: var(--primary-light); color: var(--primary); padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">
+        @{{ u.username }}
+      </div>
+    </div>
+    
+    <div class="divider" style="margin: 0;"></div>
+    
+    <div class="card-body">
+      {% if u.email %}
+        <div style="display: flex; gap: 10px; padding: 8px 0;"><span style="color: var(--text-muted);">📧</span><span>{{ u.email }}</span></div>
+      {% endif %}
+      {% if u.telephone %}
+        <div style="display: flex; gap: 10px; padding: 8px 0;"><span style="color: var(--text-muted);">📞</span><span>{{ u.telephone }}</span></div>
+      {% endif %}
+      {% if u.adresse %}
+        <div style="display: flex; gap: 10px; padding: 8px 0;"><span style="color: var(--text-muted);">📍</span><span>{{ u.adresse }}</span></div>
+      {% endif %}
+      <div style="display: flex; gap: 10px; padding: 8px 0;"><span style="color: var(--text-muted);">📅</span><span>Membre depuis {{ u.created_at|date:"d/m/Y" }}</span></div>
+    </div>
+  </div>
+
+  <div>
+    {% if u.role != 'patient' %}
+    <div class="card mb-2">
+      <div class="card-header"><h5>Accès et droits</h5></div>
+      <div class="card-body">
+        <div style="font-size: 13px; display: grid; gap: 8px;">
+          
+          {% if u.role == 'chef' %}
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Gestion complète de l'ERP</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Tous les modules</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Rapports et statistiques</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Gestion RH</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Gestion utilisateurs</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Export PDF</div>
+          
+          {% elif u.role == 'medecin' %}
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Dossiers patients</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Consultations</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Ordonnances</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Prescriptions d'analyses</div>
+          
+          {% elif u.role == 'pharmacien' %}
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Gestion stock médicaments</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Mouvements de stock</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Dispensation ordonnances</div>
+          
+          {% elif u.role == 'laborantin' %}
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Réception des demandes</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Saisie des résultats</div>
+          
+          {% elif u.role == 'comptable' or u.role == 'receptionniste' %}
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Facturation</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Enregistrement paiements</div>
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--success);">✅</span> Rendez-vous</div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h5>Actions rapides</h5></div>
+      <div class="card-body" style="display: grid; gap: 8px;">
+        <a href="/dashboard/" class="btn btn-outline">📊 Tableau de bord</a>
+        
+        {% if u.role == 'medecin' or u.role == 'chef' %}
+          <a href="/consultations/nouvelle/" class="btn btn-outline">🩺 Nouvelle consultation</a>
+        {% endif %}
+        
+        {% if u.role == 'pharmacien' or u.role == 'chef' %}
+          <a href="/pharmacie/nouveau/" class="btn btn-outline">💊 Ajouter médicament</a>
+        {% endif %}
+        
+        <a href="/rh/conge/demander/" class="btn btn-outline">🌴 Demander congé</a>
+        <a href="/logout/" class="btn btn-danger" style="margin-top: 8px;">→ Se déconnecter</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
